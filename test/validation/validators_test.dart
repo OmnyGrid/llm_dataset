@@ -32,15 +32,18 @@ void main() {
 
   test('DuplicateValidator stream and store', () async {
     final store = MemoryDatasetStore();
-    await store.add(entry(id: 'existing'));
+    await store.add(entry(id: 'existing', input: 'stored content'));
     final v = DuplicateValidator(store: store, checkContentFingerprint: true);
 
     expect((await v.validate(entry(id: 'existing'))).isValid, isFalse);
-    expect((await v.validate(entry(id: 'new'))).isValid, isTrue);
     expect(
-      (await v.validate(entry(id: 'new2'))).isValid,
+      (await v.validate(entry(id: 'new', input: 'unique'))).isValid,
+      isTrue,
+    );
+    expect(
+      (await v.validate(entry(id: 'new2', input: 'unique'))).isValid,
       isFalse,
-    ); // fingerprint
+    );
   });
 
   test('MetadataValidator', () async {

@@ -1,4 +1,5 @@
 import '../model/dataset_entry.dart';
+import 'variation_generate_options.dart';
 
 /// Produces variation entries linked to a canonical (or parent) entry.
 ///
@@ -8,10 +9,12 @@ import '../model/dataset_entry.dart';
 abstract interface class DatasetVariationGenerator {
   /// Generates zero or more variations of [entry].
   ///
-  /// The API returns a [Future] list for simplicity. Streaming variation
-  /// generators can be added later without changing this contract by wrapping
-  /// results in a stream at the call site.
-  Future<List<DatasetEntry>> generate(DatasetEntry entry);
+  /// [options] is supplied by [DatasetPipeline] to assign unique indexes and
+  /// instance ids across multiple generators.
+  Future<List<DatasetEntry>> generate(
+    DatasetEntry entry, {
+    VariationGenerateOptions options = defaultVariationGenerateOptions,
+  });
 }
 
 /// Named variation strategies supported by built-in generators.

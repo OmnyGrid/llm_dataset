@@ -184,7 +184,7 @@ class DatasetEntry {
       output: json['output'] as String?,
       thinking: json['thinking'] as String?,
       variationGroup: json['variationGroup'] as String,
-      variationIndex: json['variationIndex'] as int,
+      variationIndex: (json['variationIndex'] as num).toInt(),
       metadata: rawMetadata is Map
           ? Map<String, dynamic>.from(rawMetadata)
           : const <String, dynamic>{},

@@ -34,8 +34,17 @@ class MemoryDatasetStore implements DatasetStore {
 
   @override
   Future<void> addAll(Stream<DatasetEntry> entries) async {
-    await for (final entry in entries) {
-      await add(entry);
+    final added = <String>[];
+    try {
+      await for (final entry in entries) {
+        await add(entry);
+        added.add(entry.id);
+      }
+    } catch (error) {
+      for (final id in added) {
+        _entries.remove(id);
+      }
+      rethrow;
     }
   }
 

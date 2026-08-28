@@ -26,6 +26,10 @@ DatasetEntry buildCanonicalEntry({
   ]);
   final id = stableDatasetId([variationGroup, index, 'canonical']);
 
+  final createdAt = config.seed == null
+      ? DateTime.now().toUtc()
+      : _deterministicCreatedAt(config.seed!, document.id, index);
+
   return DatasetEntry(
     id: id,
     dataset: config.dataset,
@@ -51,9 +55,18 @@ DatasetEntry buildCanonicalEntry({
       generatorVersion: config.generatorVersion,
       pipelineVersion: config.pipelineVersion,
     ),
-    createdAt: config.seed == null
-        ? DateTime.now().toUtc()
-        : DateTime.fromMillisecondsSinceEpoch(config.seed!, isUtc: true),
+    createdAt: createdAt,
+  );
+}
+
+DateTime _deterministicCreatedAt(int seed, String documentId, int index) {
+  final offset = int.parse(
+    stableDatasetId([seed, documentId, index]).substring(0, 8),
+    radix: 16,
+  );
+  return DateTime.fromMillisecondsSinceEpoch(
+    seed + (offset % 86400000),
+    isUtc: true,
   );
 }
 

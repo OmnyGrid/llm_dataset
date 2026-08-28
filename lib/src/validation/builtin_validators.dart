@@ -1,6 +1,7 @@
 import '../model/dataset_entry.dart';
 import '../store/dataset_store.dart';
 import '../util/ids.dart';
+import '../util/json_equals.dart';
 import 'dataset_validator.dart';
 
 /// Rejects entries with empty [DatasetEntry.input] (and empty output when
@@ -42,18 +43,21 @@ class EmptyContentValidator implements DatasetValidator {
 class DuplicateValidator implements DatasetValidator {
   /// Creates a duplicate detector.
   ///
-  /// When [store] is set, existing ids are checked via [DatasetStore.get].
-  /// An in-memory set tracks ids seen in the current streaming pass.
+  /// When [store] is set, existing ids are checked via [DatasetStore.get] and
+  /// content fingerprints are loaded from the store once when
+  /// [checkContentFingerprint] is true.
   DuplicateValidator({this.store, this.checkContentFingerprint = false});
 
   /// Optional persistent store for id lookups.
   final DatasetStore? store;
 
-  /// When true, also rejects duplicate input fingerprints within the stream.
+  /// When true, also rejects duplicate input fingerprints within the stream
+  /// and against persisted entries when [store] is set.
   final bool checkContentFingerprint;
 
   final Set<String> _seenIds = <String>{};
   final Set<String> _seenFingerprints = <String>{};
+  bool _storeFingerprintsLoaded = false;
 
   @override
   Future<DatasetValidationResult> validate(DatasetEntry entry) async {
@@ -74,16 +78,10 @@ class DuplicateValidator implements DatasetValidator {
         );
       }
     }
-    _seenIds.add(entry.id);
 
     if (checkContentFingerprint) {
-      final fp = stableDatasetId([
-        entry.dataset,
-        entry.input,
-        entry.output,
-        entry.variationGroup,
-        entry.variationIndex,
-      ]);
+      await _ensureStoreFingerprintsLoaded();
+      final fp = entryContentFingerprint(entry);
       if (_seenFingerprints.contains(fp)) {
         return DatasetValidationResult.invalid(
           'duplicate content fingerprint',
@@ -91,7 +89,11 @@ class DuplicateValidator implements DatasetValidator {
           entryId: entry.id,
         );
       }
-      _seenFingerprints.add(fp);
+    }
+
+    _seenIds.add(entry.id);
+    if (checkContentFingerprint) {
+      _seenFingerprints.add(entryContentFingerprint(entry));
     }
 
     return DatasetValidationResult.valid(
@@ -100,10 +102,20 @@ class DuplicateValidator implements DatasetValidator {
     );
   }
 
+  Future<void> _ensureStoreFingerprintsLoaded() async {
+    if (!_storeFingerprintsLoaded && store != null) {
+      await for (final entry in store!.stream()) {
+        _seenFingerprints.add(entryContentFingerprint(entry));
+      }
+      _storeFingerprintsLoaded = true;
+    }
+  }
+
   /// Clears stream-local seen sets (does not affect [store]).
   void reset() {
     _seenIds.clear();
     _seenFingerprints.clear();
+    _storeFingerprintsLoaded = false;
   }
 }
 

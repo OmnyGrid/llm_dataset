@@ -42,17 +42,19 @@ class Dataset {
       q = q.limit(limit);
     }
 
-    var entries = await q.toList();
     if (shuffle) {
-      entries = seededShuffle(entries, seed ?? 0);
+      final entries = await q.toList();
+      for (final entry in seededShuffle(entries, seed ?? 0)) {
+        yield entry;
+      }
+      return;
     }
-    for (final entry in entries) {
-      yield entry;
-    }
+
+    yield* q.stream();
   }
 
-  /// Streams fixed-size batches without materializing the full dataset beyond
-  /// the active query result set required for shuffle/sample.
+  /// Streams fixed-size batches without materializing the full dataset when
+  /// shuffle and sampling are not requested.
   Stream<List<DatasetEntry>> batches(
     int size, {
     VariationSelection? variationSelection,

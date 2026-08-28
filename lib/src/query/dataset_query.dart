@@ -2,6 +2,7 @@ import '../model/dataset_entry.dart';
 import '../model/dataset_entry_type.dart';
 import '../store/dataset_store.dart';
 import '../util/ids.dart';
+import '../util/json_equals.dart';
 
 /// How variation groups are selected in a query or training stream.
 enum VariationSelection {
@@ -21,6 +22,7 @@ class DatasetQuerySpec {
   const DatasetQuerySpec({
     this.dataset,
     this.datasetVersion,
+    this.matchNullDatasetVersion = false,
     this.language,
     this.type,
     this.variationGroup,
@@ -42,6 +44,9 @@ class DatasetQuerySpec {
 
   /// Dataset version filter.
   final String? datasetVersion;
+
+  /// When true, match rows whose [DatasetEntry.datasetVersion] is null.
+  final bool matchNullDatasetVersion;
 
   /// Language filter.
   final String? language;
@@ -90,7 +95,12 @@ class DatasetQuerySpec {
     if (dataset != null && entry.dataset != dataset) {
       return false;
     }
-    if (datasetVersion != null && entry.datasetVersion != datasetVersion) {
+    if (matchNullDatasetVersion) {
+      if (entry.datasetVersion != null) {
+        return false;
+      }
+    } else if (datasetVersion != null &&
+        entry.datasetVersion != datasetVersion) {
       return false;
     }
     if (language != null && entry.language != language) {
@@ -111,24 +121,33 @@ class DatasetQuerySpec {
     }
     if (metadataKey != null) {
       if (!entry.metadata.containsKey(metadataKey) ||
-          entry.metadata[metadataKey] != metadataValue) {
+          !jsonDeepEquals(entry.metadata[metadataKey], metadataValue)) {
         return false;
       }
-    }
-    if (canonicalOnly != null && entry.isCanonical != canonicalOnly) {
-      return false;
     }
     if (variationSelection == VariationSelection.canonicalOnly &&
         !entry.isCanonical) {
       return false;
     }
+    if (canonicalOnly != null && entry.isCanonical != canonicalOnly) {
+      return false;
+    }
     return true;
   }
+
+  /// Whether results require loading and post-processing the full match set.
+  bool get requiresFullMaterialization =>
+      sampleCount != null ||
+      variationSelection == VariationSelection.onePerGroup ||
+      orderByCreatedAtAscending != null ||
+      offset != null ||
+      limit != null;
 
   /// Returns a copy with selected fields replaced.
   DatasetQuerySpec copyWith({
     String? dataset,
     String? datasetVersion,
+    bool? matchNullDatasetVersion,
     String? language,
     DatasetEntryType? type,
     String? variationGroup,
@@ -145,10 +164,15 @@ class DatasetQuerySpec {
     int? sampleSeed,
     bool clearCanonicalOnly = false,
     bool clearSample = false,
+    bool clearDatasetVersion = false,
   }) {
     return DatasetQuerySpec(
       dataset: dataset ?? this.dataset,
-      datasetVersion: datasetVersion ?? this.datasetVersion,
+      datasetVersion: clearDatasetVersion
+          ? null
+          : (datasetVersion ?? this.datasetVersion),
+      matchNullDatasetVersion:
+          matchNullDatasetVersion ?? this.matchNullDatasetVersion,
       language: language ?? this.language,
       type: type ?? this.type,
       variationGroup: variationGroup ?? this.variationGroup,
@@ -197,7 +221,17 @@ List<DatasetEntry> applyQueryPostProcessing(
   if (spec.sampleCount != null) {
     final seed = spec.sampleSeed ?? 0;
     entries = seededSample(entries, spec.sampleCount!, seed);
-    entries.sort((a, b) => a.id.compareTo(b.id));
+    if (orderAsc != null) {
+      entries.sort((a, b) {
+        final cmp = a.createdAt.compareTo(b.createdAt);
+        if (cmp != 0) {
+          return orderAsc ? cmp : -cmp;
+        }
+        return a.id.compareTo(b.id);
+      });
+    } else {
+      entries.sort((a, b) => a.id.compareTo(b.id));
+    }
   }
 
   final offset = spec.offset ?? 0;
@@ -277,8 +311,18 @@ class DatasetQuery {
   DatasetQuery dataset(String name) => _copy(_spec.copyWith(dataset: name));
 
   /// Restricts to [DatasetEntry.datasetVersion].
-  DatasetQuery datasetVersion(String version) =>
-      _copy(_spec.copyWith(datasetVersion: version));
+  DatasetQuery datasetVersion(String version) => _copy(
+    _spec.copyWith(
+      datasetVersion: version,
+      matchNullDatasetVersion: false,
+      clearDatasetVersion: false,
+    ),
+  );
+
+  /// Restricts to rows with a null [DatasetEntry.datasetVersion].
+  DatasetQuery unversionedDataset() => _copy(
+    _spec.copyWith(clearDatasetVersion: true, matchNullDatasetVersion: true),
+  );
 
   /// Restricts to [language].
   DatasetQuery language(String language) =>
@@ -303,17 +347,40 @@ class DatasetQuery {
       _copy(_spec.copyWith(metadataKey: key, metadataValue: value));
 
   /// Restricts to canonical or non-canonical entries.
-  DatasetQuery canonicalOnly([bool only = true]) =>
-      _copy(_spec.copyWith(canonicalOnly: only));
+  DatasetQuery canonicalOnly([bool only = true]) {
+    if (only) {
+      return _copy(
+        _spec.copyWith(
+          variationSelection: VariationSelection.canonicalOnly,
+          clearCanonicalOnly: true,
+        ),
+      );
+    }
+    return _copy(
+      _spec.copyWith(
+        variationSelection: VariationSelection.all,
+        canonicalOnly: false,
+      ),
+    );
+  }
 
   /// When [include] is false, only canonical entries are returned.
-  DatasetQuery variations([bool include = true]) => include
-      ? _copy(_spec.copyWith(clearCanonicalOnly: true))
-      : canonicalOnly(true);
+  DatasetQuery variations([bool include = true]) {
+    if (include) {
+      return _copy(
+        _spec.copyWith(
+          variationSelection: VariationSelection.all,
+          clearCanonicalOnly: true,
+        ),
+      );
+    }
+    return canonicalOnly(true);
+  }
 
   /// Sets variation-aware selection mode.
-  DatasetQuery variationSelection(VariationSelection selection) =>
-      _copy(_spec.copyWith(variationSelection: selection));
+  DatasetQuery variationSelection(VariationSelection selection) => _copy(
+    _spec.copyWith(variationSelection: selection, clearCanonicalOnly: true),
+  );
 
   /// Convenience for [VariationSelection.onePerGroup].
   DatasetQuery onePerVariationGroup() =>
@@ -351,8 +418,18 @@ class DatasetQuery {
 
   /// Streams matching entries.
   Stream<DatasetEntry> stream() async* {
-    for (final entry in await toList()) {
-      yield entry;
+    if (_executor != null) {
+      yield* Stream.fromIterable(await _executor(_spec));
+      return;
+    }
+    if (_spec.requiresFullMaterialization) {
+      yield* Stream.fromIterable(await toList());
+      return;
+    }
+    await for (final entry in _store.stream()) {
+      if (_spec.matchesFilters(entry)) {
+        yield entry;
+      }
     }
   }
 

@@ -2,6 +2,7 @@ import '../model/dataset_entry.dart';
 import '../model/dataset_provenance.dart';
 import '../util/ids.dart';
 import 'dataset_variation_generator.dart';
+import 'variation_generate_options.dart';
 
 /// Built-in, provider-independent variation generator.
 ///
@@ -18,6 +19,7 @@ class RuleBasedVariationGenerator implements DatasetVariationGenerator {
     this.seed,
     this.generatorVersion = '1.0.0',
     this.startIndex = 1,
+    this.instanceId,
   });
 
   /// Strategies to apply in order (after optional seeded shuffle).
@@ -29,11 +31,17 @@ class RuleBasedVariationGenerator implements DatasetVariationGenerator {
   /// Version recorded in provenance.
   final String generatorVersion;
 
-  /// First variation index to assign (canonical is typically `0`).
+  /// Default first variation index when [VariationGenerateOptions] is omitted.
   final int startIndex;
 
+  /// Optional stable id for this generator instance (included in entry ids).
+  final String? instanceId;
+
   @override
-  Future<List<DatasetEntry>> generate(DatasetEntry entry) async {
+  Future<List<DatasetEntry>> generate(
+    DatasetEntry entry, {
+    VariationGenerateOptions options = defaultVariationGenerateOptions,
+  }) async {
     if (strategies.isEmpty) {
       return const [];
     }
@@ -43,9 +51,10 @@ class RuleBasedVariationGenerator implements DatasetVariationGenerator {
         : seededShuffle(List<VariationStrategy>.from(strategies), seed!);
 
     final results = <DatasetEntry>[];
-    var index = startIndex;
+    var index = options.startVariationIndex;
+    final generatorKey = options.instanceId ?? instanceId ?? generatorVersion;
     for (final strategy in ordered) {
-      results.add(_vary(entry, strategy, index));
+      results.add(_vary(entry, strategy, index, generatorKey));
       index++;
     }
     return results;
@@ -55,6 +64,7 @@ class RuleBasedVariationGenerator implements DatasetVariationGenerator {
     DatasetEntry entry,
     VariationStrategy strategy,
     int variationIndex,
+    String generatorKey,
   ) {
     final transformed = _apply(entry.input, strategy);
     final output = entry.output == null
@@ -66,6 +76,7 @@ class RuleBasedVariationGenerator implements DatasetVariationGenerator {
       variationIndex,
       strategy.name,
       seed,
+      generatorKey,
     ]);
 
     return entry.copyWith(

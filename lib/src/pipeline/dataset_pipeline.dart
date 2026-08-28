@@ -4,6 +4,7 @@ import '../source/dataset_source.dart';
 import '../store/dataset_store.dart';
 import '../validation/dataset_validator.dart';
 import '../variation/dataset_variation_generator.dart';
+import '../variation/variation_generate_options.dart';
 
 /// Summary of a [DatasetPipeline.run] invocation.
 class DatasetPipelineResult {
@@ -40,13 +41,15 @@ class DatasetVersionExistsException implements Exception {
   /// Dataset name.
   final String dataset;
 
-  /// Dataset version that already exists.
-  final String datasetVersion;
+  /// Dataset version that already exists (`null` means unversioned rows).
+  final String? datasetVersion;
 
   @override
-  String toString() =>
-      'DatasetVersionExistsException: dataset "$dataset" version '
-      '"$datasetVersion" already has entries';
+  String toString() {
+    final versionLabel = datasetVersion ?? '(unversioned)';
+    return 'DatasetVersionExistsException: dataset "$dataset" version '
+        '"$versionLabel" already has entries';
+  }
 }
 
 /// Incremental pipeline: source → generator → variations → validators → store.
@@ -95,9 +98,8 @@ class DatasetPipeline {
   Future<DatasetPipelineResult> run() async {
     if (failIfVersionExists &&
         dataset != null &&
-        datasetVersion != null &&
-        await _versionExists(dataset!, datasetVersion!)) {
-      throw DatasetVersionExistsException(dataset!, datasetVersion!);
+        await _datasetSliceExists(dataset!, datasetVersion)) {
+      throw DatasetVersionExistsException(dataset!, datasetVersion);
     }
 
     var documentsSeen = 0;
@@ -110,8 +112,17 @@ class DatasetPipeline {
       documentsSeen++;
       await for (final canonical in generator.generate(document)) {
         final batch = <DatasetEntry>[canonical];
-        for (final variationGenerator in variations) {
-          batch.addAll(await variationGenerator.generate(canonical));
+        var nextVariationIndex = 1;
+        for (var i = 0; i < variations.length; i++) {
+          final generated = await variations[i].generate(
+            canonical,
+            options: VariationGenerateOptions(
+              startVariationIndex: nextVariationIndex,
+              instanceId: 'variation-$i',
+            ),
+          );
+          nextVariationIndex += generated.length;
+          batch.addAll(generated);
         }
 
         for (final entry in batch) {
@@ -148,13 +159,12 @@ class DatasetPipeline {
     return DatasetValidationResult.merge(results);
   }
 
-  Future<bool> _versionExists(String datasetName, String version) async {
-    final found = await store
-        .query()
-        .dataset(datasetName)
-        .datasetVersion(version)
-        .limit(1)
-        .toList();
+  Future<bool> _datasetSliceExists(String datasetName, String? version) async {
+    var query = store.query().dataset(datasetName);
+    query = version == null
+        ? query.unversionedDataset()
+        : query.datasetVersion(version);
+    final found = await query.limit(1).toList();
     return found.isNotEmpty;
   }
 }

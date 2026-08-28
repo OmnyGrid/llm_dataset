@@ -115,6 +115,7 @@ class SqliteDatasetStore implements DatasetStore {
   @override
   Future<void> addAll(Stream<DatasetEntry> entries) async {
     _ensureOpen();
+    _db.execute('BEGIN IMMEDIATE');
     final stmt = _db.prepare(_insertSql);
     try {
       await for (final entry in entries) {
@@ -127,6 +128,10 @@ class SqliteDatasetStore implements DatasetStore {
         }
         stmt.execute(_rowValues(entry));
       }
+      _db.execute('COMMIT');
+    } catch (error) {
+      _db.execute('ROLLBACK');
+      rethrow;
     } finally {
       stmt.close();
     }
@@ -230,7 +235,9 @@ ${_limitOffsetSql(spec)}
       clauses.add('dataset = ?');
       params.add(spec.dataset);
     }
-    if (spec.datasetVersion != null) {
+    if (spec.matchNullDatasetVersion) {
+      clauses.add('dataset_version IS NULL');
+    } else if (spec.datasetVersion != null) {
       clauses.add('dataset_version = ?');
       params.add(spec.datasetVersion);
     }
