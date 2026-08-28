@@ -1,7 +1,7 @@
 name: llm_dataset
 description: Stream-oriented infrastructure for building and querying LLM training datasets.
 version: 1.0.0
-# repository: https://github.com/my_org/my_repo
+repository: https://github.com/OmnyGrid/llm_dataset
 publish_to: none
 
 environment:
@@ -11,5 +11,6 @@ dependencies:
   sqlite3: ^3.5.2
 
 dev_dependencies:
+  dependency_validator: ^3.2.3
   lints: ^6.1.0
   test: ^1.31.2
