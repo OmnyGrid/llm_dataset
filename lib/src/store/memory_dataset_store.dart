@@ -48,6 +48,17 @@ class MemoryDatasetStore implements DatasetStore {
     }
   }
 
+  /// Deletes entries by [ids]. Returns number removed.
+  Future<int> deleteIds(Iterable<String> ids) async {
+    var count = 0;
+    for (final id in ids) {
+      if (_entries.remove(id) != null) {
+        count++;
+      }
+    }
+    return count;
+  }
+
   @override
   Future<DatasetEntry?> get(String id) async => _entries[id];
 

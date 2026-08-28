@@ -138,3 +138,31 @@ provenance, variation fields, and timestamps preserved.
 Record `dataset` + `datasetVersion`, `pipelineVersion`, generator versions, and
 seeds. The pipeline refuses to silently overwrite an existing dataset version
 when `failIfVersionExists` is true (default).
+
+## Dataset lifecycle
+
+```dart
+final lifecycle = DatasetLifecycle(store);
+final datasets = await lifecycle.listDatasets();
+final versions = await lifecycle.listVersions('geography');
+await lifecycle.exportJsonl('out.jsonl', dataset: 'geography', version: 'v1');
+await lifecycle.deleteDataset('geography', version: 'v0');
+```
+
+## End-to-end example
+
+Run the SQLite workflow demo:
+
+```bash
+dart run example/end_to_end.dart
+```
+
+## LLM adapters (no SDK in this package)
+
+See [`example/adapters/README.md`](example/adapters/README.md) for generator and
+variation adapters that call **your** model via async callbacks.
+
+## CI & coverage
+
+GitHub Actions runs format, analyze, tests, and uploads coverage to Codecov.
+Add a `CODECOV_TOKEN` repository secret for upload enforcement.

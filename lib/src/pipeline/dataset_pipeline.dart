@@ -5,6 +5,7 @@ import '../store/dataset_store.dart';
 import '../validation/dataset_validator.dart';
 import '../variation/dataset_variation_generator.dart';
 import '../variation/variation_generate_options.dart';
+import 'pipeline_store_error_policy.dart';
 
 /// Summary of a [DatasetPipeline.run] invocation.
 class DatasetPipelineResult {
@@ -15,6 +16,7 @@ class DatasetPipelineResult {
     required this.entriesStored,
     required this.entriesRejected,
     required this.rejections,
+    this.storeErrors = const [],
   });
 
   /// Number of source documents consumed.
@@ -31,6 +33,9 @@ class DatasetPipelineResult {
 
   /// Validation failures collected during the run.
   final List<DatasetValidationResult> rejections;
+
+  /// Store failures collected when [PipelineStoreErrorPolicy.continueProcessing].
+  final List<Object> storeErrors;
 }
 
 /// Thrown when a pipeline refuses to overwrite an existing dataset version.
@@ -56,7 +61,7 @@ class DatasetVersionExistsException implements Exception {
 ///
 /// Operates with streams and never requires the complete dataset in memory.
 /// Invalid entries are skipped after recording a rejection; infrastructure
-/// failures (e.g. store errors) propagate to the caller.
+/// failures propagate by default ([PipelineStoreErrorPolicy.abort]).
 class DatasetPipeline {
   /// Creates a dataset pipeline.
   DatasetPipeline({
@@ -68,6 +73,7 @@ class DatasetPipeline {
     this.dataset,
     this.datasetVersion,
     this.failIfVersionExists = true,
+    this.storeErrorPolicy = PipelineStoreErrorPolicy.abort,
   });
 
   /// Document source.
@@ -94,6 +100,9 @@ class DatasetPipeline {
   /// When true, refuses to run if [dataset]/[datasetVersion] already has rows.
   final bool failIfVersionExists;
 
+  /// How store persistence failures are handled.
+  final PipelineStoreErrorPolicy storeErrorPolicy;
+
   /// Runs the pipeline to completion.
   Future<DatasetPipelineResult> run() async {
     if (failIfVersionExists &&
@@ -107,6 +116,7 @@ class DatasetPipeline {
     var entriesStored = 0;
     var entriesRejected = 0;
     final rejections = <DatasetValidationResult>[];
+    final storeErrors = <Object>[];
 
     await for (final document in source.load()) {
       documentsSeen++;
@@ -133,8 +143,23 @@ class DatasetPipeline {
             rejections.add(validation);
             continue;
           }
-          await store.add(entry);
-          entriesStored++;
+          try {
+            await store.add(entry);
+            entriesStored++;
+          } on Object catch (error) {
+            if (storeErrorPolicy == PipelineStoreErrorPolicy.abort) {
+              rethrow;
+            }
+            storeErrors.add(error);
+            entriesRejected++;
+            rejections.add(
+              DatasetValidationResult.invalid(
+                'store error: $error',
+                validatorName: 'DatasetStore',
+                entryId: entry.id,
+              ),
+            );
+          }
         }
       }
     }
@@ -145,6 +170,7 @@ class DatasetPipeline {
       entriesStored: entriesStored,
       entriesRejected: entriesRejected,
       rejections: rejections,
+      storeErrors: storeErrors,
     );
   }
 

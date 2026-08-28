@@ -150,25 +150,45 @@ class SqliteDatasetStore implements DatasetStore {
   @override
   Stream<DatasetEntry> stream() async* {
     _ensureOpen();
-    final rows = _db.select('SELECT * FROM dataset_entries ORDER BY id ASC');
-    for (final row in rows) {
-      yield _fromRow(row);
-    }
+    yield* _streamSql(
+      'SELECT * FROM dataset_entries ORDER BY id ASC',
+      const [],
+    );
   }
 
   @override
-  DatasetQuery query() => DatasetQuery(this, executor: executeQuery);
+  DatasetQuery query() => DatasetQuery(
+    this,
+    executor: executeQuery,
+    streamExecutor: executeQueryStream,
+  );
+
+  /// Streams query results in batches without loading the full match set.
+  Stream<DatasetEntry> executeQueryStream(DatasetQuerySpec spec) async* {
+    _ensureOpen();
+    if (spec.requiresFullMaterialization || !spec.canStreamFromStore) {
+      yield* Stream.fromIterable(await executeQuery(spec));
+      return;
+    }
+
+    if (spec.variationSelection == VariationSelection.onePerGroup) {
+      final rows = _onePerGroupSql(spec);
+      for (final entry in rows) {
+        yield entry;
+      }
+      return;
+    }
+
+    yield* _streamQuerySpec(spec);
+  }
 
   /// Executes [spec] with SQL pushdown where practical.
   Future<List<DatasetEntry>> executeQuery(DatasetQuerySpec spec) async {
     _ensureOpen();
 
-    // Metadata equality, random sampling, and seeded one-per-group need Dart.
     final needsDart =
-        spec.metadataKey != null ||
-        spec.sampleCount != null ||
-        (spec.variationSelection == VariationSelection.onePerGroup &&
-            spec.sampleSeed != null);
+        spec.requiresFullMaterialization ||
+        (spec.metadataKey != null && !spec.metadataIsSqlComparable);
 
     if (needsDart) {
       final built = _buildSelect(spec, applyLimitOffset: false);
@@ -184,6 +204,143 @@ class SqliteDatasetStore implements DatasetStore {
     final built = _buildSelect(spec, applyLimitOffset: true);
     final rows = _db.select(built.sql, built.params);
     return rows.map(_fromRow).toList();
+  }
+
+  /// Distinct dataset names in the store.
+  Future<List<String>> listDatasets() async {
+    _ensureOpen();
+    final rows = _db.select(
+      'SELECT DISTINCT dataset FROM dataset_entries ORDER BY dataset ASC',
+    );
+    return [for (final row in rows) row['dataset'] as String];
+  }
+
+  /// Distinct version values for [dataset] (`null` = unversioned).
+  Future<List<String?>> listVersions(String dataset) async {
+    _ensureOpen();
+    final rows = _db.select(
+      'SELECT DISTINCT dataset_version FROM dataset_entries '
+      'WHERE dataset = ? ORDER BY dataset_version ASC',
+      [dataset],
+    );
+    return [for (final row in rows) row['dataset_version'] as String?];
+  }
+
+  /// Counts rows for [dataset], optionally filtered by version.
+  Future<int> countDataset(
+    String dataset, {
+    String? version,
+    bool unversionedOnly = false,
+  }) async {
+    _ensureOpen();
+    final filters = _buildFilters(
+      DatasetQuerySpec(
+        dataset: dataset,
+        datasetVersion: version,
+        matchNullDatasetVersion: unversionedOnly,
+      ),
+    );
+    final whereSql = filters.clauses.isEmpty
+        ? ''
+        : 'WHERE ${filters.clauses.join(' AND ')}';
+    final rows = _db.select(
+      'SELECT COUNT(*) AS c FROM dataset_entries $whereSql',
+      filters.params,
+    );
+    return rows.first['c'] as int;
+  }
+
+  /// Deletes rows for [dataset], returning deleted count.
+  Future<int> deleteDataset(
+    String dataset, {
+    String? version,
+    bool unversionedOnly = false,
+  }) async {
+    _ensureOpen();
+    final filters = _buildFilters(
+      DatasetQuerySpec(
+        dataset: dataset,
+        datasetVersion: version,
+        matchNullDatasetVersion: unversionedOnly,
+      ),
+    );
+    final whereSql = filters.clauses.isEmpty
+        ? ''
+        : 'WHERE ${filters.clauses.join(' AND ')}';
+    _db.execute('DELETE FROM dataset_entries $whereSql', filters.params);
+    return _db.updatedRows;
+  }
+
+  /// Deletes rows with ids in [ids].
+  Future<int> deleteIds(Iterable<String> ids) async {
+    _ensureOpen();
+    final idList = ids.toList();
+    if (idList.isEmpty) {
+      return 0;
+    }
+    final placeholders = List.filled(idList.length, '?').join(', ');
+    _db.execute(
+      'DELETE FROM dataset_entries WHERE id IN ($placeholders)',
+      idList,
+    );
+    return _db.updatedRows;
+  }
+
+  Stream<DatasetEntry> _streamQuerySpec(
+    DatasetQuerySpec spec, {
+    int batchSize = 500,
+  }) async* {
+    var offset = spec.offset ?? 0;
+    final max = spec.limit;
+    var yielded = 0;
+
+    while (true) {
+      final batchLimit = max == null
+          ? batchSize
+          : (max - yielded).clamp(0, batchSize);
+      if (batchLimit == 0) {
+        break;
+      }
+
+      final batchSpec = spec.copyWith(offset: offset, limit: batchLimit);
+      final built = _buildSelect(batchSpec, applyLimitOffset: true);
+      final rows = _db.select(built.sql, built.params);
+      if (rows.isEmpty) {
+        break;
+      }
+
+      for (final row in rows) {
+        yield _fromRow(row);
+        yielded++;
+      }
+
+      if (rows.length < batchLimit) {
+        break;
+      }
+      offset += rows.length;
+    }
+  }
+
+  Stream<DatasetEntry> _streamSql(
+    String sql,
+    List<Object?> params, {
+    int batchSize = 500,
+  }) async* {
+    var offset = 0;
+    while (true) {
+      final paged = '$sql LIMIT ? OFFSET ?';
+      final rows = _db.select(paged, [...params, batchSize, offset]);
+      if (rows.isEmpty) {
+        break;
+      }
+      for (final row in rows) {
+        yield _fromRow(row);
+      }
+      if (rows.length < batchSize) {
+        break;
+      }
+      offset += rows.length;
+    }
   }
 
   List<DatasetEntry> _onePerGroupSql(DatasetQuerySpec spec) {
@@ -267,7 +424,22 @@ ${_limitOffsetSql(spec)}
     } else if (spec.variationSelection == VariationSelection.canonicalOnly) {
       clauses.add('is_canonical = 1');
     }
+    if (spec.metadataKey != null && spec.metadataIsSqlComparable) {
+      clauses.add('json_extract(metadata_json, ?) = ?');
+      params.add('\$.${spec.metadataKey}');
+      params.add(_sqlJsonLiteral(spec.metadataValue));
+    }
     return _FilterParts(clauses, params);
+  }
+
+  Object? _sqlJsonLiteral(Object? value) {
+    if (value == null) {
+      return null;
+    }
+    if (value is bool) {
+      return value ? 1 : 0;
+    }
+    return value;
   }
 
   String _orderSql(DatasetQuerySpec spec) {

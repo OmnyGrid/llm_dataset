@@ -135,13 +135,34 @@ class DatasetQuerySpec {
     return true;
   }
 
-  /// Whether results require loading and post-processing the full match set.
+  /// Whether Dart-side post-processing (sample / complex metadata) is required.
   bool get requiresFullMaterialization =>
       sampleCount != null ||
-      variationSelection == VariationSelection.onePerGroup ||
-      orderByCreatedAtAscending != null ||
-      offset != null ||
-      limit != null;
+      (variationSelection == VariationSelection.onePerGroup &&
+          sampleSeed != null) ||
+      (metadataKey != null && !metadataIsSqlComparable);
+
+  /// Whether [metadataValue] can be compared via SQLite `json_extract`.
+  bool get metadataIsSqlComparable {
+    if (metadataKey == null) {
+      return true;
+    }
+    final value = metadataValue;
+    return value == null || value is String || value is num || value is bool;
+  }
+
+  /// Whether the memory store can filter rows incrementally without sorting.
+  bool get canFilterIncrementallyInMemory =>
+      !requiresFullMaterialization &&
+      variationSelection != VariationSelection.onePerGroup &&
+      orderByCreatedAtAscending == null &&
+      limit == null &&
+      offset == null;
+
+  /// Whether a SQLite store may stream SQL results for this spec incrementally.
+  bool get canStreamFromStore =>
+      !requiresFullMaterialization &&
+      (metadataKey == null || metadataIsSqlComparable);
 
   /// Returns a copy with selected fields replaced.
   DatasetQuerySpec copyWith({
@@ -286,6 +307,11 @@ typedef DatasetQueryExecutor = Future<List<DatasetEntry>> Function(
   DatasetQuerySpec spec,
 );
 
+/// Streams [DatasetQuerySpec] results without loading the full match set.
+typedef DatasetQueryStreamExecutor = Stream<DatasetEntry> Function(
+  DatasetQuerySpec spec,
+);
+
 /// Fluent, immutable query builder over a [DatasetStore].
 class DatasetQuery {
   /// Creates a query bound to [store].
@@ -295,13 +321,20 @@ class DatasetQuery {
   DatasetQuery(
     DatasetStore store, {
     DatasetQueryExecutor? executor,
+    DatasetQueryStreamExecutor? streamExecutor,
     DatasetQuerySpec? spec,
-  }) : this._(store, executor, spec ?? const DatasetQuerySpec());
+  }) : this._(
+         store,
+         executor,
+         streamExecutor,
+         spec ?? const DatasetQuerySpec(),
+       );
 
-  DatasetQuery._(this._store, this._executor, this._spec);
+  DatasetQuery._(this._store, this._executor, this._streamExecutor, this._spec);
 
   final DatasetStore _store;
   final DatasetQueryExecutor? _executor;
+  final DatasetQueryStreamExecutor? _streamExecutor;
   final DatasetQuerySpec _spec;
 
   /// Current immutable query specification.
@@ -418,11 +451,16 @@ class DatasetQuery {
 
   /// Streams matching entries.
   Stream<DatasetEntry> stream() async* {
+    if (_streamExecutor != null && _spec.canStreamFromStore) {
+      yield* _streamExecutor(_spec);
+      return;
+    }
     if (_executor != null) {
       yield* Stream.fromIterable(await _executor(_spec));
       return;
     }
-    if (_spec.requiresFullMaterialization) {
+    if (_spec.requiresFullMaterialization ||
+        !_spec.canFilterIncrementallyInMemory) {
       yield* Stream.fromIterable(await toList());
       return;
     }
@@ -444,5 +482,5 @@ class DatasetQuery {
   }
 
   DatasetQuery _copy(DatasetQuerySpec spec) =>
-      DatasetQuery._(_store, _executor, spec);
+      DatasetQuery._(_store, _executor, _streamExecutor, spec);
 }

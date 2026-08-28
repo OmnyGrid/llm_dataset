@@ -83,5 +83,5 @@ jobs:
           directory: ./coverage/
           flags: unittests
           env_vars: OS,DART
-          fail_ci_if_error: false
+          fail_ci_if_error: true
           verbose: true
