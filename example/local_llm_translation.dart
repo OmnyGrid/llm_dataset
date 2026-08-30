@@ -10,25 +10,7 @@ import 'package:llm_dataset/llm_dataset.dart';
 
 import 'adapters/local_llm_client.dart';
 import 'adapters/llm_translation_adapter.dart';
-
-Future<TranslateTextFn> _resolveTranslateFn() async {
-  if (useMockFromEnvironment()) {
-    print('LLM_DATASET_USE_MOCK=1 → using mockTranslate');
-    return mockTranslate;
-  }
-
-  final config = LocalLlmConfig.fromEnvironment();
-  final client = LocalLlmClient(config);
-  print('Probing local LLM at ${config.baseUrl} (model=${config.model})…');
-
-  if (await client.isAvailable()) {
-    print('Local LLM reachable → using chat/completions');
-    return localLlmTranslateFn(client);
-  }
-
-  print('Local LLM not reachable → falling back to mockTranslate');
-  return mockTranslate;
-}
+import 'adapters/translation_client.dart';
 
 Future<void> main() async {
   final envTargets = targetLanguagesFromEnvironment(
@@ -39,7 +21,18 @@ Future<void> main() async {
     targetLanguage: Platform.environment['LOCAL_LLM_PRIMARY_LANG'],
     targetLanguages: envTargets,
   );
-  final translate = await _resolveTranslateFn();
+
+  final client = await resolveExampleTranslationClient();
+  if (client is MockTranslationClient) {
+    print('Using MockTranslationClient');
+  } else if (client is LocalLlmTranslationClient) {
+    print(
+      'Using LocalLlmTranslationClient '
+      '(${client.llm.config.baseUrl}, model=${client.llm.config.model})',
+    );
+  } else {
+    print('Using ${client.runtimeType}');
+  }
 
   final store = MemoryDatasetStore();
   final config = GeneratorConfig(
@@ -72,7 +65,7 @@ Future<void> main() async {
     variations: [
       LlmTranslationVariationGenerator(
         targetLanguages: targetLanguages,
-        translate: translate,
+        client: client,
         instanceId: 'local-llm',
         generatorVersion: 'local-llm-example-1',
       ),

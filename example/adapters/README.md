@@ -22,17 +22,59 @@ final pipeline = DatasetPipeline(
 );
 ```
 
-## Variation adapter
+## Translation client + variation generator
+
+[`translation_client.dart`](translation_client.dart) defines the provider contract:
+
+- `TranslationClient` — implement for each provider (`translate`, `isAvailable`)
+- `MockTranslationClient` — offline stub
+- `CallbackTranslationClient` — wrap legacy `TranslateTextFn` callbacks
+- `firstAvailableTranslationClient` — pick the first reachable provider
+
+[`llm_translation_adapter.dart`](llm_translation_adapter.dart):
+
+- `LlmTranslationVariationGenerator(client: …)` — configure a client, swap providers
+- `LlmTranslationVariationGenerator.withTranslate(…)` — legacy callback constructor
+
+[`local_llm_client.dart`](local_llm_client.dart):
+
+- `LocalLlmTranslationClient` — Ollama / LM Studio via OpenAI-compatible HTTP
+- `resolveExampleTranslationClient()` — local LLM with mock fallback
+
+```dart
+variations: [
+  LlmTranslationVariationGenerator(
+    targetLanguages: ['es', 'fr'],
+    client: LocalLlmTranslationClient.fromEnvironment(),
+  ),
+],
+```
+
+### Extend with your provider
+
+```dart
+final class AcmeTranslationClient implements TranslationClient {
+  @override
+  Future<bool> isAvailable() async => true;
+
+  @override
+  Future<String> translate(String text, {
+    required String sourceLanguage,
+    required String targetLanguage,
+  }) async {
+    return await acmeApi.translate(text, from: sourceLanguage, to: targetLanguage);
+  }
+}
+```
+
+See [`../translation_client_providers.dart`](../translation_client_providers.dart).
+
+## Paraphrase variation adapter
 
 [`llm_variation_adapter.dart`](llm_variation_adapter.dart) defines:
 
 - `LlmParaphraseVariationGenerator` — one paraphrase per canonical entry
 - `mockParaphrase` — offline stub
-
-[`llm_translation_adapter.dart`](llm_translation_adapter.dart) defines:
-
-- `LlmTranslationVariationGenerator` — extends [`TranslationVariationGenerator`](../../lib/src/variation/translation_variation_generator.dart)
-- `mockTranslate` — offline stub
 
 Built-in (no LLM):
 
@@ -40,36 +82,29 @@ Built-in (no LLM):
 - `CallbackTranslationVariationGenerator` — supply your own `TranslateTextFn`
 - `RuleBasedTranslationVariationGenerator` — deterministic `[lang]` prefix stub
 
-```dart
-variations: [
-  CallbackTranslationVariationGenerator(
-    targetLanguages: ['es', 'fr', 'de'],
-    translate: myTranslateFn,
-  ),
-],
-```
-
 The pipeline assigns unique `variationIndex` values and `instanceId`s across
 multiple variation generators automatically.
 
-## Wiring your client
+## Local LLM translation example
 
-Replace the callback bodies with your provider of choice:
+[`../local_llm_translation.dart`](../local_llm_translation.dart) — generic local OpenAI-compatible server.
 
-1. Build a prompt string from `DatasetSourceDocument` / `DatasetEntry`
-2. Await your model response
-3. Map the response into `input` / `output` (and optional `metadata['messages']`)
-4. Return — provenance is already set on the adapter examples
+[`../lm_studio_translation.dart`](../lm_studio_translation.dart) — **LM Studio** at
+`http://127.0.0.1:1234/v1`, expands each canonical Q/A into multiple translated
+variations (default targets: `es,fr,de,pt`).
 
-Keep retries, rate limits, and auth **outside** this package in your adapter.
+```bash
+# LM Studio: start local server on port 1234, load a model, then:
+dart run example/lm_studio_translation.dart
 
-## Local LLM translation
+# More target languages → more variations per document
+LOCAL_LLM_TARGET_LANG=es,fr,de,pt,it,ja dart run example/lm_studio_translation.dart
 
-[`local_llm_client.dart`](local_llm_client.dart) — OpenAI-compatible HTTP client for
-Ollama / LM Studio (`/v1/chat/completions`).
+# Auto-pick the loaded model from /v1/models
+LOCAL_LLM_MODEL=auto dart run example/lm_studio_translation.dart
+```
 
-[`../local_llm_translation.dart`](../local_llm_translation.dart) — full pipeline
-example using `LlmTranslationVariationGenerator` + local API.
+[`../local_llm_translation.dart`](../local_llm_translation.dart) — Ollama / custom URL via env.
 
 ```bash
 # Ollama (default http://localhost:11434/v1)
@@ -97,3 +132,5 @@ Environment variables:
 | `LOCAL_LLM_PRIMARY_LANG` | _(none)_ | Optional primary target merged before `LOCAL_LLM_TARGET_LANG` |
 | `LOCAL_LLM_API_KEY` | _(none)_ | Optional bearer token |
 | `LLM_DATASET_USE_MOCK` | _(unset)_ | Set to `1` to skip HTTP |
+
+Keep retries, rate limits, and auth inside your [TranslationClient] implementation.

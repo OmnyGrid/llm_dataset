@@ -1,6 +1,7 @@
 import 'package:test/test.dart';
 
 import '../../example/adapters/local_llm_client.dart';
+import '../../example/adapters/translation_client.dart';
 
 void main() {
   test('buildTranslationPrompt includes languages and source text', () {
@@ -15,15 +16,15 @@ void main() {
     expect(prompt, contains('Return only the translated text'));
   });
 
-  test('localLlmTranslateFn delegates to client.chat', () async {
+  test('LocalLlmTranslationClient delegates to chat', () async {
     final calls = <String>[];
-    final client = _FakeLocalLlmClient((prompt) async {
+    final llm = _FakeLocalLlmClient((prompt) async {
       calls.add(prompt);
       return 'Hola';
     });
+    final client = LocalLlmTranslationClient(llm);
 
-    final translate = localLlmTranslateFn(client);
-    final result = await translate(
+    final result = await client.translate(
       'Hello',
       sourceLanguage: 'en',
       targetLanguage: 'es',
@@ -33,6 +34,17 @@ void main() {
     expect(calls, hasLength(1));
     expect(calls.single, contains('Hello'));
   });
+
+  test(
+    'firstAvailableTranslationClient picks first reachable client',
+    () async {
+      final chosen = await firstAvailableTranslationClient([
+        _UnavailableClient(),
+        const MockTranslationClient(),
+      ]);
+      expect(chosen, isA<MockTranslationClient>());
+    },
+  );
 }
 
 class _FakeLocalLlmClient extends LocalLlmClient {
@@ -43,4 +55,18 @@ class _FakeLocalLlmClient extends LocalLlmClient {
 
   @override
   Future<String> chat(String prompt) => _chat(prompt);
+}
+
+class _UnavailableClient implements TranslationClient {
+  @override
+  Future<bool> isAvailable() async => false;
+
+  @override
+  Future<String> translate(
+    String text, {
+    required String sourceLanguage,
+    required String targetLanguage,
+  }) {
+    throw UnsupportedError('unavailable');
+  }
 }

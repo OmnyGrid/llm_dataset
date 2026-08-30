@@ -5,6 +5,7 @@ import 'package:test/test.dart';
 import '../../example/adapters/llm_generator_adapter.dart';
 import '../../example/adapters/llm_translation_adapter.dart';
 import '../../example/adapters/llm_variation_adapter.dart';
+import '../../example/adapters/translation_client.dart';
 
 void main() {
   test('LlmQuestionAnswerGenerator produces canonical entries', () async {
@@ -66,13 +67,36 @@ void main() {
 
       final variations = await LlmTranslationVariationGenerator(
         targetLanguage: 'es',
-        translate: mockTranslate,
+        client: const MockTranslationClient(),
       ).generate(parent);
 
       expect(variations, hasLength(1));
       expect(variations.single.provenance?.parentEntryId, 'p1');
       expect(variations.single.language, 'es');
       expect(variations.single.input, startsWith('[es]'));
+    },
+  );
+
+  test(
+    'LlmTranslationVariationGenerator.withTranslate supports callbacks',
+    () async {
+      final parent = DatasetEntry(
+        id: 'p1',
+        dataset: 'd',
+        type: DatasetEntryType.text,
+        language: 'en',
+        input: 'Hi',
+        variationGroup: 'g',
+        variationIndex: 0,
+        createdAt: DateTime.utc(2024),
+      );
+
+      final variations = await LlmTranslationVariationGenerator.withTranslate(
+        targetLanguage: 'fr',
+        translate: mockTranslate,
+      ).generate(parent);
+
+      expect(variations.single.language, 'fr');
     },
   );
 }
