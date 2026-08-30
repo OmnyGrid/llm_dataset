@@ -94,9 +94,7 @@ void main() {
       ).run();
 
       expect(result.entriesStored, 3);
-      final entries = await store
-          .query()
-          .toList()
+      final entries = await store.query().toList()
         ..sort((a, b) => a.variationIndex.compareTo(b.variationIndex));
       expect(entries.map((e) => e.variationIndex), [0, 1, 2]);
       expect(entries[1].language, 'es');
