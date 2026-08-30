@@ -112,13 +112,17 @@ For **real translation variations**, use `TranslationVariationGenerator`
 ```dart
 variations: [
   CallbackTranslationVariationGenerator(
-    targetLanguages: ['es', 'fr', 'de'],
+    targetLanguage: 'es',
+    targetLanguages: ['fr', 'de', 'es'], // merged + uniquified → es, fr, de
     translate: (text, {required sourceLanguage, required targetLanguage}) async {
       return await myMtClient.translate(text, from: sourceLanguage, to: targetLanguage);
     },
   ),
 ],
 ```
+
+See [`example/translation_target_languages.dart`](example/translation_target_languages.dart) for
+[`normalizeTargetLanguages`](lib/src/variation/translation_variation_generator.dart) usage.
 
 ## Validation
 

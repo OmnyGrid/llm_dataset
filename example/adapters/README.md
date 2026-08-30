@@ -94,5 +94,6 @@ Environment variables:
 | `LOCAL_LLM_BASE_URL` | `http://localhost:11434/v1` | OpenAI-compatible base URL |
 | `LOCAL_LLM_MODEL` | `llama3.2` | Model id for chat completions |
 | `LOCAL_LLM_TARGET_LANG` | `es` | Comma-separated target language codes (`es,fr,de`) |
+| `LOCAL_LLM_PRIMARY_LANG` | _(none)_ | Optional primary target merged before `LOCAL_LLM_TARGET_LANG` |
 | `LOCAL_LLM_API_KEY` | _(none)_ | Optional bearer token |
 | `LLM_DATASET_USE_MOCK` | _(unset)_ | Set to `1` to skip HTTP |

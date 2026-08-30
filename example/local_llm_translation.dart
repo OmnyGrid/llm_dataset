@@ -4,6 +4,8 @@
 /// `LLM_DATASET_USE_MOCK=1 dart run example/local_llm_translation.dart`
 library;
 
+import 'dart:io';
+
 import 'package:llm_dataset/llm_dataset.dart';
 
 import 'adapters/local_llm_client.dart';
@@ -29,9 +31,13 @@ Future<TranslateTextFn> _resolveTranslateFn() async {
 }
 
 Future<void> main() async {
-  final targetLanguages = targetLanguagesFromEnvironment(
+  final envTargets = targetLanguagesFromEnvironment(
     'LOCAL_LLM_TARGET_LANG',
     defaults: const ['es'],
+  );
+  final targetLanguages = normalizeTargetLanguages(
+    targetLanguage: Platform.environment['LOCAL_LLM_PRIMARY_LANG'],
+    targetLanguages: envTargets,
   );
   final translate = await _resolveTranslateFn();
 
