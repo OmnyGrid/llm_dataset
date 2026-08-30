@@ -108,19 +108,32 @@ void main() {
       expect(variations.single.variationIndex, 1);
     });
 
-    test('normalizeTargetLanguages accepts single or many targets', () {
+    test('normalizeTargetLanguages merges, trims, and uniquifies targets', () {
       expect(normalizeTargetLanguages(targetLanguage: 'es'), ['es']);
       expect(normalizeTargetLanguages(targetLanguages: ['es', 'fr']), [
         'es',
         'fr',
       ]);
       expect(
-        () => normalizeTargetLanguages(
+        normalizeTargetLanguages(
           targetLanguage: 'es',
-          targetLanguages: ['fr'],
+          targetLanguages: [' fr ', 'es', 'de', 'fr'],
         ),
+        ['es', 'fr', 'de'],
+      );
+      expect(
+        () => normalizeTargetLanguages(targetLanguages: ['', '  ']),
         throwsArgumentError,
       );
+    });
+
+    test('constructor merges targetLanguage with targetLanguages', () async {
+      final variations = await RuleBasedTranslationVariationGenerator(
+        targetLanguage: 'es',
+        targetLanguages: ['fr', 'es', 'de'],
+      ).generate(_parent());
+
+      expect(variations.map((v) => v.language), ['es', 'fr', 'de']);
     });
 
     test('works in pipeline alongside other variation generators', () async {

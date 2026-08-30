@@ -12,30 +12,38 @@ typedef TranslateTextFn = Future<String> Function(
   required String targetLanguage,
 });
 
-/// Normalizes [targetLanguage] / [targetLanguages] into a non-empty language list.
+/// Normalizes [targetLanguage] and [targetLanguages] into a non-empty,
+/// de-duplicated language list (first occurrence wins).
 List<String> normalizeTargetLanguages({
   String? targetLanguage,
   Iterable<String>? targetLanguages,
 }) {
-  if (targetLanguage != null && targetLanguages != null) {
-    throw ArgumentError(
-      'Pass either targetLanguage or targetLanguages, not both.',
-    );
-  }
-  if (targetLanguage != null) {
-    return [targetLanguage];
-  }
-  if (targetLanguages != null) {
-    final languages = [
-      for (final language in targetLanguages)
-        if (language.trim().isNotEmpty) language.trim(),
-    ];
-    if (languages.isEmpty) {
-      throw ArgumentError('targetLanguages must not be empty.');
+  final languages = <String>[];
+  final seen = <String>{};
+
+  void add(String? raw) {
+    if (raw == null) {
+      return;
     }
-    return languages;
+    final trimmed = raw.trim();
+    if (trimmed.isEmpty || seen.contains(trimmed)) {
+      return;
+    }
+    seen.add(trimmed);
+    languages.add(trimmed);
   }
-  throw ArgumentError('Either targetLanguage or targetLanguages is required.');
+
+  add(targetLanguage);
+  if (targetLanguages != null) {
+    for (final language in targetLanguages) {
+      add(language);
+    }
+  }
+
+  if (languages.isEmpty) {
+    throw ArgumentError('At least one non-empty target language is required.');
+  }
+  return languages;
 }
 
 /// Base class for translation [DatasetVariationGenerator] implementations.
@@ -45,13 +53,14 @@ List<String> normalizeTargetLanguages({
 /// assigning consecutive [DatasetEntry.variationIndex] values, and linking
 /// [DatasetProvenance.parentEntryId].
 ///
-/// Configure one or many targets via [targetLanguage] or [targetLanguages].
+/// Configure targets via [targetLanguage], [targetLanguages], or both.
 abstract base class TranslationVariationGenerator
     implements DatasetVariationGenerator {
   /// Creates a translation variation generator.
   ///
-  /// Pass [targetLanguage] for a single target, or [targetLanguages] for
-  /// several (one variation entry per language).
+  /// Pass [targetLanguage], [targetLanguages], or both. Values are merged and
+  /// de-duplicated (first occurrence wins). One variation is emitted per
+  /// resulting language code.
   TranslationVariationGenerator({
     String? targetLanguage,
     Iterable<String>? targetLanguages,
