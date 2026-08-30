@@ -17,5 +17,7 @@ dart run example/<file>.dart
 | [`custom_generator.dart`](custom_generator.dart) | Custom `DatasetGenerator` implementation |
 | [`builtin_generators.dart`](builtin_generators.dart) | All built-in generators on one document |
 | [`validation_and_rejections.dart`](validation_and_rejections.dart) | `CompositeValidator`, rejections, version guard |
+| [`translation_variation.dart`](translation_variation.dart) | `TranslationVariationGenerator` and callbacks |
+| [`local_llm_translation.dart`](local_llm_translation.dart) | Translation via local LLM API (Ollama / LM Studio) |
 | [`pipeline_store_errors.dart`](pipeline_store_errors.dart) | `PipelineStoreErrorPolicy.continueProcessing` |
 | [`adapters/`](adapters/) | LLM-backed generator and variation adapters |

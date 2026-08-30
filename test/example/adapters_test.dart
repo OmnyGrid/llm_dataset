@@ -3,6 +3,7 @@ import 'package:test/test.dart';
 
 // Adapter examples are validated here without importing example/ paths directly.
 import '../../example/adapters/llm_generator_adapter.dart';
+import '../../example/adapters/llm_translation_adapter.dart';
 import '../../example/adapters/llm_variation_adapter.dart';
 
 void main() {
@@ -47,4 +48,31 @@ void main() {
     expect(variations.single.provenance?.parentEntryId, 'p1');
     expect(variations.single.input, startsWith('In other words:'));
   });
+
+  test(
+    'LlmTranslationVariationGenerator translates and links parent',
+    () async {
+      final parent = DatasetEntry(
+        id: 'p1',
+        dataset: 'd',
+        type: DatasetEntryType.text,
+        language: 'en',
+        input: 'Question?',
+        output: 'Answer',
+        variationGroup: 'g',
+        variationIndex: 0,
+        createdAt: DateTime.utc(2024),
+      );
+
+      final variations = await LlmTranslationVariationGenerator(
+        targetLanguage: 'es',
+        translate: mockTranslate,
+      ).generate(parent);
+
+      expect(variations, hasLength(1));
+      expect(variations.single.provenance?.parentEntryId, 'p1');
+      expect(variations.single.language, 'es');
+      expect(variations.single.input, startsWith('[es]'));
+    },
+  );
 }

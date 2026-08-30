@@ -28,4 +28,5 @@ export 'src/validation/builtin_validators.dart';
 export 'src/validation/dataset_validator.dart';
 export 'src/variation/dataset_variation_generator.dart';
 export 'src/variation/rule_based_variation_generator.dart';
+export 'src/variation/translation_variation_generator.dart';
 export 'src/variation/variation_generate_options.dart';

@@ -106,6 +106,20 @@ SDK. Supply your own `DatasetGenerator` to call an external model.
 and sets `provenance.parentEntryId`. Pass `seed` for deterministic strategy
 ordering.
 
+For **real translation variations**, use `TranslationVariationGenerator`
+(`CallbackTranslationVariationGenerator`, `RuleBasedTranslationVariationGenerator`):
+
+```dart
+variations: [
+  CallbackTranslationVariationGenerator(
+    targetLanguage: 'es',
+    translate: (text, {required sourceLanguage, required targetLanguage}) async {
+      return await myMtClient.translate(text, from: sourceLanguage, to: targetLanguage);
+    },
+  ),
+],
+```
+
 ## Validation
 
 Composable validators: empty content, duplicates (stream + store), metadata,
