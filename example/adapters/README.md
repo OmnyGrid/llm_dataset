@@ -43,7 +43,7 @@ Built-in (no LLM):
 ```dart
 variations: [
   CallbackTranslationVariationGenerator(
-    targetLanguage: 'es',
+    targetLanguages: ['es', 'fr', 'de'],
     translate: myTranslateFn,
   ),
 ],
@@ -82,6 +82,9 @@ LLM_DATASET_USE_MOCK=1 dart run example/local_llm_translation.dart
 # LM Studio or custom endpoint
 LOCAL_LLM_BASE_URL=http://localhost:1234/v1 LOCAL_LLM_MODEL=my-model \
   LOCAL_LLM_TARGET_LANG=fr dart run example/local_llm_translation.dart
+
+# Multiple targets in one generator
+LOCAL_LLM_TARGET_LANG=es,fr,de dart run example/local_llm_translation.dart
 ```
 
 Environment variables:
@@ -90,6 +93,6 @@ Environment variables:
 |----------|---------|---------|
 | `LOCAL_LLM_BASE_URL` | `http://localhost:11434/v1` | OpenAI-compatible base URL |
 | `LOCAL_LLM_MODEL` | `llama3.2` | Model id for chat completions |
-| `LOCAL_LLM_TARGET_LANG` | `es` | Translation target language code |
+| `LOCAL_LLM_TARGET_LANG` | `es` | Comma-separated target language codes (`es,fr,de`) |
 | `LOCAL_LLM_API_KEY` | _(none)_ | Optional bearer token |
 | `LLM_DATASET_USE_MOCK` | _(unset)_ | Set to `1` to skip HTTP |

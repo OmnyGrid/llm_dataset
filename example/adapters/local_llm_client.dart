@@ -159,3 +159,18 @@ TranslateTextFn localLlmTranslateFn(LocalLlmClient client) {
 /// Whether examples should skip HTTP and use deterministic stubs.
 bool useMockFromEnvironment() =>
     Platform.environment['LLM_DATASET_USE_MOCK'] == '1';
+
+/// Parses comma-separated language codes from an environment variable.
+List<String> targetLanguagesFromEnvironment(
+  String name, {
+  List<String> defaults = const ['es'],
+}) {
+  final raw = Platform.environment[name];
+  if (raw == null || raw.trim().isEmpty) {
+    return defaults;
+  }
+  return [
+    for (final part in raw.split(','))
+      if (part.trim().isNotEmpty) part.trim(),
+  ];
+}

@@ -22,17 +22,16 @@ Future<void> main() async {
     ]),
     generator: TextGenerator(config),
     variations: [
-      RuleBasedTranslationVariationGenerator(targetLanguage: 'es'),
       RuleBasedTranslationVariationGenerator(
-        targetLanguage: 'fr',
-        instanceId: 'fr',
+        targetLanguages: ['es', 'fr', 'de'],
+        instanceId: 'multi-lang',
       ),
       CallbackTranslationVariationGenerator(
-        targetLanguage: 'de',
-        instanceId: 'de-callback',
+        targetLanguage: 'it',
+        instanceId: 'it-callback',
         translate:
             (text, {required sourceLanguage, required targetLanguage}) async {
-              return 'DE($sourceLanguage→$targetLanguage): $text';
+              return 'IT($sourceLanguage→$targetLanguage): $text';
             },
       ),
     ],

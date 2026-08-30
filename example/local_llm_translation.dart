@@ -4,8 +4,6 @@
 /// `LLM_DATASET_USE_MOCK=1 dart run example/local_llm_translation.dart`
 library;
 
-import 'dart:io';
-
 import 'package:llm_dataset/llm_dataset.dart';
 
 import 'adapters/local_llm_client.dart';
@@ -31,7 +29,10 @@ Future<TranslateTextFn> _resolveTranslateFn() async {
 }
 
 Future<void> main() async {
-  final targetLanguage = Platform.environment['LOCAL_LLM_TARGET_LANG'] ?? 'es';
+  final targetLanguages = targetLanguagesFromEnvironment(
+    'LOCAL_LLM_TARGET_LANG',
+    defaults: const ['es'],
+  );
   final translate = await _resolveTranslateFn();
 
   final store = MemoryDatasetStore();
@@ -44,7 +45,8 @@ Future<void> main() async {
   );
 
   print(
-    '== Pipeline: canonical entries + local LLM translation ($targetLanguage) ==',
+    '== Pipeline: canonical entries + local LLM translation '
+    '(${targetLanguages.join(', ')}) ==',
   );
   final result = await DatasetPipeline(
     source: MemorySource([
@@ -63,9 +65,9 @@ Future<void> main() async {
     generator: TextGenerator(config),
     variations: [
       LlmTranslationVariationGenerator(
-        targetLanguage: targetLanguage,
+        targetLanguages: targetLanguages,
         translate: translate,
-        instanceId: 'local-llm-$targetLanguage',
+        instanceId: 'local-llm',
         generatorVersion: 'local-llm-example-1',
       ),
     ],

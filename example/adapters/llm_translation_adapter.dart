@@ -3,12 +3,13 @@ library;
 
 import 'package:llm_dataset/llm_dataset.dart';
 
-/// Generates one translation variation via [CallbackTranslationVariationGenerator].
+/// Generates translation variations via [CallbackTranslationVariationGenerator].
 final class LlmTranslationVariationGenerator
     extends CallbackTranslationVariationGenerator {
   /// Creates an adapter around [translate].
   LlmTranslationVariationGenerator({
-    required super.targetLanguage,
+    super.targetLanguage,
+    super.targetLanguages,
     required super.translate,
     super.generatorVersion = 'llm-translation-1.0.0',
     super.instanceId = 'llm-translation',

@@ -73,6 +73,56 @@ void main() {
       },
     );
 
+    test('emits one variation per configured target language', () async {
+      final generator = CallbackTranslationVariationGenerator(
+        targetLanguages: ['es', 'fr', 'de'],
+        translate:
+            (text, {required sourceLanguage, required targetLanguage}) async {
+              return '$targetLanguage:$text';
+            },
+      );
+
+      final variations = await generator.generate(_parent());
+      expect(variations, hasLength(3));
+      expect(variations.map((v) => v.variationIndex), [1, 2, 3]);
+      expect(variations.map((v) => v.language), ['es', 'fr', 'de']);
+      expect(variations.map((v) => v.metadata['targetLanguage']), [
+        'es',
+        'fr',
+        'de',
+      ]);
+      for (final variation in variations) {
+        expect(variation.provenance?.parentEntryId, 'parent');
+        expect(variation.variationGroup, 'group-1');
+      }
+    });
+
+    test('skips targets that match the entry language', () async {
+      final generator = RuleBasedTranslationVariationGenerator(
+        targetLanguages: ['en', 'es'],
+      );
+
+      final variations = await generator.generate(_parent());
+      expect(variations, hasLength(1));
+      expect(variations.single.language, 'es');
+      expect(variations.single.variationIndex, 1);
+    });
+
+    test('normalizeTargetLanguages accepts single or many targets', () {
+      expect(normalizeTargetLanguages(targetLanguage: 'es'), ['es']);
+      expect(normalizeTargetLanguages(targetLanguages: ['es', 'fr']), [
+        'es',
+        'fr',
+      ]);
+      expect(
+        () => normalizeTargetLanguages(
+          targetLanguage: 'es',
+          targetLanguages: ['fr'],
+        ),
+        throwsArgumentError,
+      );
+    });
+
     test('works in pipeline alongside other variation generators', () async {
       final store = MemoryDatasetStore();
       final config = GeneratorConfig(dataset: 'i18n', seed: 1);
