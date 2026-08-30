@@ -149,6 +149,16 @@ await lifecycle.exportJsonl('out.jsonl', dataset: 'geography', version: 'v1');
 await lifecycle.deleteDataset('geography', version: 'v0');
 ```
 
+## Examples
+
+See [`example/README.md`](example/README.md) for runnable demos:
+
+```bash
+dart run example/query_and_sampling.dart
+dart run example/jsonl_import_export.dart
+dart run example/builtin_generators.dart
+```
+
 ## End-to-end example
 
 Run the SQLite workflow demo:
