@@ -54,10 +54,11 @@ void main() {
       expect(result.entriesStored, 3);
       final stored = await store.stream().toList();
       expect(stored.map((e) => e.id).toSet(), hasLength(3));
-      expect(stored.where((e) => !e.isCanonical).map((e) => e.variationIndex), [
-        1,
-        2,
-      ]);
+      expect(
+        stored.where((e) => !e.isCanonical).map((e) => e.variationIndex).toList()
+          ..sort(),
+        [1, 2],
+      );
     });
   });
 

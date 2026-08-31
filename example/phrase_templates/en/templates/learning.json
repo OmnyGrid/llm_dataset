@@ -1,0 +1,81 @@
+{
+  "group": "learning",
+  "description": "Language learning and study phrases",
+  "templates": [
+    {
+      "id": "ext-daily-study",
+      "template": "The {subject} {verb} {language} {text_unit} every day.",
+      "structureVariants": [
+        "Every day, the {subject} {verb} {language} {text_unit}.",
+        "{language} {text_unit} is {verb} by the {subject} every day."
+      ],
+      "slotCategories": {
+        "subject": "actor",
+        "verb": "action",
+        "language": "language",
+        "text_unit": "text_part"
+      }
+    },
+    {
+      "id": "ext-read-chapter",
+      "template": "In the {place}, the {subject} {adverb} {verb} a {language} {text_unit}.",
+      "structureVariants": [
+        "The {subject} {adverb} {verb} a {language} {text_unit} in the {place}.",
+        "A {language} {text_unit} is {adverb} {verb} by the {subject} in the {place}."
+      ],
+      "slotCategories": {
+        "place": "place",
+        "subject": "actor",
+        "adverb": "manner",
+        "verb": "action",
+        "language": "language",
+        "text_unit": "text_part"
+      }
+    },
+    {
+      "id": "ext-write-article",
+      "template": "The {subject} {adverb} {verb} an {language} {text_unit} at {place}.",
+      "structureVariants": [
+        "At {place}, the {subject} {adverb} {verb} an {language} {text_unit}.",
+        "An {language} {text_unit} is {adverb} {verb} by the {subject} at {place}."
+      ],
+      "slotCategories": {
+        "subject": "actor",
+        "adverb": "manner",
+        "verb": "action",
+        "language": "language",
+        "text_unit": "text_part",
+        "place": "place"
+      }
+    },
+    {
+      "id": "ext-practice-language",
+      "template": "This {activity} helps the {subject} improve {language} {work}.",
+      "structureVariants": [
+        "The {subject} improves {language} {work} through this {activity}.",
+        "Through this {activity}, {language} {work} improves for the {subject}."
+      ],
+      "slotCategories": {
+        "activity": "activity",
+        "subject": "actor",
+        "language": "language",
+        "work": "activity"
+      }
+    },
+    {
+      "id": "ext-teacher-class",
+      "template": "The {subject} {verb} a {language} {text_unit} in the {place}.",
+      "structureVariants": [
+        "In the {place}, the {subject} {verb} a {language} {text_unit}.",
+        "A {language} {text_unit} is {verb} by the {subject} in the {place}."
+      ],
+      "slotCategories": {
+        "subject": "actor",
+        "verb": "action",
+        "language": "language",
+        "text_unit": "text_part",
+        "place": "place"
+      }
+    }
+  ]
+}

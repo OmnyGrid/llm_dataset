@@ -114,4 +114,26 @@ void main() {
     expect(a.map((e) => e.id), b.map((e) => e.id));
     expect(a, hasLength(5));
   });
+
+  test('addAllBatched commits in chunks without duplicate probes', () async {
+    store.configureForBulkInsert(cacheSizeKiB: 2048);
+    await store.addAllBatched(
+      Stream.fromIterable([for (var i = 0; i < 25; i++) e('batch-$i')]),
+      batchSize: 10,
+    );
+    expect(await store.get('batch-0'), isNotNull);
+    expect(await store.get('batch-24'), isNotNull);
+  });
+
+  test('addAllBatched can enforce duplicate ids when requested', () async {
+    await store.add(e('dup-batch'));
+    expect(
+      () => store.addAllBatched(
+        Stream.fromIterable([e('dup-batch'), e('unique-batch')]),
+        checkDuplicates: true,
+      ),
+      throwsA(isA<DuplicateEntryException>()),
+    );
+    expect(await store.get('unique-batch'), isNull);
+  });
 }

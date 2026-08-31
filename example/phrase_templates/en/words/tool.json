@@ -1,0 +1,10 @@
+{
+  "category": "tool",
+  "description": "Tools and devices",
+  "words": {
+    "laptop": ["laptop", "computer", "machine"],
+    "phone": ["phone", "mobile device", "smartphone"],
+    "notebook": ["notebook", "notepad", "journal"],
+    "keyboard": ["keyboard", "input device", "keys"]
+  }
+}

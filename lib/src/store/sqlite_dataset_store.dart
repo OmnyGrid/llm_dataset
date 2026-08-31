@@ -36,6 +36,20 @@ class SqliteDatasetStore implements DatasetStore {
     _db.execute('PRAGMA foreign_keys = ON;');
   }
 
+  /// Tunes SQLite for large bulk inserts (WAL, relaxed sync, bounded cache).
+  ///
+  /// Call before streaming millions of rows. Safe for file-backed databases
+  /// used as temporary build artifacts.
+  void configureForBulkInsert({
+    int cacheSizeKiB = 65536,
+  }) {
+    _ensureOpen();
+    _db.execute('PRAGMA journal_mode = WAL;');
+    _db.execute('PRAGMA synchronous = NORMAL;');
+    _db.execute('PRAGMA temp_store = MEMORY;');
+    _db.execute('PRAGMA cache_size = -$cacheSizeKiB;');
+  }
+
   void _migrate() {
     _db.execute('''
       CREATE TABLE IF NOT EXISTS dataset_entries (
@@ -114,23 +128,67 @@ class SqliteDatasetStore implements DatasetStore {
 
   @override
   Future<void> addAll(Stream<DatasetEntry> entries) async {
+    await addAllBatched(entries, checkDuplicates: true);
+  }
+
+  /// Inserts [entries] in chunked transactions to limit WAL/journal memory.
+  ///
+  /// When [checkDuplicates] is false, skips the per-row existence probe
+  /// (appropriate for deterministic generators with unique ids).
+  Future<void> addAllBatched(
+    Stream<DatasetEntry> entries, {
+    int batchSize = 10000,
+    bool checkDuplicates = false,
+  }) async {
+    if (batchSize <= 0) {
+      throw ArgumentError.value(batchSize, 'batchSize', 'must be > 0');
+    }
+
     _ensureOpen();
-    _db.execute('BEGIN IMMEDIATE');
     final stmt = _db.prepare(_insertSql);
+    var inBatch = 0;
+    var inTransaction = false;
+
+    Future<void> begin() async {
+      if (!inTransaction) {
+        _db.execute('BEGIN IMMEDIATE');
+        inTransaction = true;
+        inBatch = 0;
+      }
+    }
+
+    Future<void> commit() async {
+      if (inTransaction) {
+        _db.execute('COMMIT');
+        inTransaction = false;
+        inBatch = 0;
+      }
+    }
+
     try {
+      await begin();
       await for (final entry in entries) {
-        final existing = _db.select(
-          'SELECT 1 FROM dataset_entries WHERE id = ? LIMIT 1',
-          [entry.id],
-        );
-        if (existing.isNotEmpty) {
-          throw DuplicateEntryException(entry.id);
+        if (checkDuplicates) {
+          final existing = _db.select(
+            'SELECT 1 FROM dataset_entries WHERE id = ? LIMIT 1',
+            [entry.id],
+          );
+          if (existing.isNotEmpty) {
+            throw DuplicateEntryException(entry.id);
+          }
         }
         stmt.execute(_rowValues(entry));
+        inBatch++;
+        if (inBatch >= batchSize) {
+          await commit();
+          await begin();
+        }
       }
-      _db.execute('COMMIT');
+      await commit();
     } catch (error) {
-      _db.execute('ROLLBACK');
+      if (inTransaction) {
+        _db.execute('ROLLBACK');
+      }
       rethrow;
     } finally {
       stmt.close();

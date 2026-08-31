@@ -1,0 +1,79 @@
+{
+  "group": "daily_routine",
+  "description": "Daily routine and schedule phrases",
+  "templates": [
+    {
+      "id": "ext-morning-drink",
+      "template": "Every {time}, the {subject} drinks {drink} at {place}.",
+      "structureVariants": [
+        "At {place}, the {subject} drinks {drink} every {time}.",
+        "Every {time} at {place}, the {subject} drinks {drink}."
+      ],
+      "slotCategories": {
+        "time": "time",
+        "subject": "actor",
+        "drink": "drink",
+        "place": "place"
+      }
+    },
+    {
+      "id": "ext-after-meal",
+      "template": "After {meal}, the {subject} {adverb} {verb} {language} {text_unit}.",
+      "structureVariants": [
+        "The {subject} {adverb} {verb} {language} {text_unit} after {meal}.",
+        "After {meal}, {language} {text_unit} is {adverb} {verb} by the {subject}."
+      ],
+      "slotCategories": {
+        "meal": "meal",
+        "subject": "actor",
+        "adverb": "manner",
+        "verb": "action",
+        "language": "language",
+        "text_unit": "text_part"
+      }
+    },
+    {
+      "id": "ext-starts-activity",
+      "template": "The {subject} starts {activity} at {time} in the {place}.",
+      "structureVariants": [
+        "At {time} in the {place}, the {subject} starts {activity}.",
+        "In the {place}, the {subject} starts {activity} at {time}."
+      ],
+      "slotCategories": {
+        "subject": "actor",
+        "activity": "activity",
+        "time": "time",
+        "place": "place"
+      }
+    },
+    {
+      "id": "ext-evening-study",
+      "template": "In the {time}, the {subject} {verb} {language} at {place}.",
+      "structureVariants": [
+        "The {subject} {verb} {language} at {place} in the {time}.",
+        "At {place} in the {time}, the {subject} {verb} {language}."
+      ],
+      "slotCategories": {
+        "time": "time",
+        "subject": "actor",
+        "verb": "action",
+        "language": "language",
+        "place": "place"
+      }
+    },
+    {
+      "id": "ext-snack-break",
+      "template": "During {meal}, the {subject} uses a {tool} in the {place}.",
+      "structureVariants": [
+        "In the {place}, the {subject} uses a {tool} during {meal}.",
+        "During {meal} in the {place}, the {subject} uses a {tool}."
+      ],
+      "slotCategories": {
+        "meal": "meal",
+        "subject": "actor",
+        "tool": "tool",
+        "place": "place"
+      }
+    }
+  ]
+}

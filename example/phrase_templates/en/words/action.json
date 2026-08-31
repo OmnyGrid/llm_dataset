@@ -1,0 +1,16 @@
+{
+  "category": "action",
+  "description": "Verbs and actions applied to objects",
+  "words": {
+    "write": ["writes", "authors", "drafts"],
+    "read": ["reads", "studies", "reviews"],
+    "build": ["builds", "creates", "constructs"],
+    "ship": ["ships", "delivers", "releases"],
+    "test": ["tests", "checks", "validates"],
+    "fix": ["fixes", "repairs", "patches"],
+    "deploy": ["deploys", "publishes", "launches"],
+    "review": ["reviews", "inspects", "audits"],
+    "plan": ["plans", "schedules", "organizes"],
+    "debug": ["debugs", "traces", "diagnoses"]
+  }
+}

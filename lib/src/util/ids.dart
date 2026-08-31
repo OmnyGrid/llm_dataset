@@ -10,7 +10,7 @@ String stableDatasetId(List<Object?> parts) {
     hash ^= b;
     hash = (hash * 0x100000001b3) & 0xFFFFFFFFFFFFFFFF;
   }
-  return hash.toRadixString(16).padLeft(16, '0');
+  return BigInt.from(hash).toUnsigned(64).toRadixString(16).padLeft(16, '0');
 }
 
 /// Approximate token count using whitespace splitting.

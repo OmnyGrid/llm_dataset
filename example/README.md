@@ -22,5 +22,7 @@ dart run example/<file>.dart
 | [`translation_client_providers.dart`](translation_client_providers.dart) | Custom `TranslationClient` provider implementations |
 | [`local_llm_translation.dart`](local_llm_translation.dart) | Translation via local LLM API (Ollama / LM Studio) |
 | [`lm_studio_translation.dart`](lm_studio_translation.dart) | LM Studio at `127.0.0.1:1234` — multi-language variation expansion |
+| [`text_exercise.dart`](text_exercise.dart) | EN/PT phrases & paragraphs with meaning-preserving variations |
+| [`phrase_template_categories.dart`](phrase_template_categories.dart) | Full combinatorial expansion with per-entry progress logging |
 | [`pipeline_store_errors.dart`](pipeline_store_errors.dart) | `PipelineStoreErrorPolicy.continueProcessing` |
 | [`adapters/`](adapters/) | LLM-backed generator and variation adapters |

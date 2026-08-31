@@ -1,0 +1,9 @@
+{
+  "category": "language",
+  "description": "Natural languages for study or output",
+  "words": {
+    "english": ["English", "the English language", "English text"],
+    "spanish": ["Spanish", "the Spanish language", "Spanish text"],
+    "french": ["French", "the French language", "French text"]
+  }
+}

@@ -16,6 +16,9 @@ DatasetEntry buildCanonicalEntry({
   String? thinking,
   Map<String, dynamic>? extraMetadata,
   int index = 0,
+  int variationIndex = 0,
+  String? parentEntryId,
+  String? transformation,
 }) {
   final language = document.language ?? config.language;
   final variationGroup = stableDatasetId([
@@ -24,11 +27,11 @@ DatasetEntry buildCanonicalEntry({
     document.id,
     generatorName,
   ]);
-  final id = stableDatasetId([variationGroup, index, 'canonical']);
+  final id = stableDatasetId([variationGroup, index, variationIndex]);
 
   final createdAt = config.seed == null
       ? DateTime.now().toUtc()
-      : _deterministicCreatedAt(config.seed!, document.id, index);
+      : _deterministicCreatedAt(config.seed!, document.id, index + variationIndex);
 
   return DatasetEntry(
     id: id,
@@ -40,7 +43,7 @@ DatasetEntry buildCanonicalEntry({
     output: output,
     thinking: thinking,
     variationGroup: variationGroup,
-    variationIndex: 0,
+    variationIndex: variationIndex,
     metadata: {
       'sourceDocumentId': document.id,
       if (document.title != null) 'sourceTitle': document.title,
@@ -54,6 +57,8 @@ DatasetEntry buildCanonicalEntry({
       generator: generatorName,
       generatorVersion: config.generatorVersion,
       pipelineVersion: config.pipelineVersion,
+      parentEntryId: parentEntryId,
+      transformation: transformation,
     ),
     createdAt: createdAt,
   );

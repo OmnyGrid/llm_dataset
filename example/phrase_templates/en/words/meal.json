@@ -1,0 +1,10 @@
+{
+  "category": "meal",
+  "description": "Meals and eating occasions",
+  "words": {
+    "breakfast": ["breakfast", "the first meal", "morning meal"],
+    "lunch": ["lunch", "midday meal", "noon meal"],
+    "dinner": ["dinner", "evening meal", "supper"],
+    "snack": ["snack", "light bite", "small meal"]
+  }
+}

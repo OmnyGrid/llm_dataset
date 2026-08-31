@@ -1,0 +1,94 @@
+{
+  "group": "quality_infrastructure",
+  "description": "Quality, infrastructure, and platform phrases",
+  "templates": [
+    {
+      "id": "ext-api-module",
+      "template": "The {subject} {verb} the {object} inside the {artifact}.",
+      "structureVariants": [
+        "Inside the {artifact}, the {subject} {verb} the {object}.",
+        "The {object} is {verb} by the {subject} inside the {artifact}."
+      ],
+      "slotCategories": {
+        "subject": "actor",
+        "verb": "action",
+        "object": "thing",
+        "artifact": "thing"
+      }
+    },
+    {
+      "id": "ext-database-test",
+      "template": "The {subject} {adverb} {verb} the {object} before the {milestone}.",
+      "structureVariants": [
+        "Before the {milestone}, the {subject} {adverb} {verb} the {object}.",
+        "The {object} is {adverb} {verb} by the {subject} before the {milestone}."
+      ],
+      "slotCategories": {
+        "subject": "actor",
+        "adverb": "manner",
+        "verb": "action",
+        "object": "thing",
+        "milestone": "milestone"
+      }
+    },
+    {
+      "id": "ext-fix-module",
+      "template": "The {subject} {adverb} {verb} the {object} in the {place}.",
+      "structureVariants": [
+        "In the {place}, the {subject} {adverb} {verb} the {object}.",
+        "The {object} is {adverb} {verb} by the {subject} in the {place}."
+      ],
+      "slotCategories": {
+        "subject": "actor",
+        "adverb": "manner",
+        "verb": "action",
+        "object": "thing",
+        "place": "place"
+      }
+    },
+    {
+      "id": "ext-improves-work",
+      "template": "This {activity} improves {language} {work} for the {subject}.",
+      "structureVariants": [
+        "For the {subject}, this {activity} improves {language} {work}.",
+        "{language} {work} improves for the {subject} through this {activity}."
+      ],
+      "slotCategories": {
+        "activity": "activity",
+        "language": "language",
+        "work": "activity",
+        "subject": "actor"
+      }
+    },
+    {
+      "id": "ext-lab-experiment",
+      "template": "In the {place}, the {subject} {adverb} {verb} a {object}.",
+      "structureVariants": [
+        "The {subject} {adverb} {verb} a {object} in the {place}.",
+        "A {object} is {adverb} {verb} by the {subject} in the {place}."
+      ],
+      "slotCategories": {
+        "place": "place",
+        "subject": "actor",
+        "adverb": "manner",
+        "verb": "action",
+        "object": "thing"
+      }
+    },
+    {
+      "id": "ext-home-study",
+      "template": "At {place}, the {subject} {verb} {language} with a {tool}.",
+      "structureVariants": [
+        "The {subject} {verb} {language} with a {tool} at {place}.",
+        "With a {tool} at {place}, the {subject} {verb} {language}."
+      ],
+      "slotCategories": {
+        "place": "place",
+        "subject": "actor",
+        "verb": "action",
+        "language": "language",
+        "tool": "tool"
+      }
+    }
+  ]
+}

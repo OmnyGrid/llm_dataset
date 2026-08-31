@@ -25,9 +25,11 @@ import 'package:llm_dataset/llm_dataset.dart';
 
 import 'adapters/local_llm_client.dart';
 import 'adapters/llm_translation_adapter.dart';
+import 'adapters/progress_translation_client.dart';
 import 'adapters/translation_client.dart';
 
 Future<void> main() async {
+  final stopwatch = Stopwatch()..start();
   final targetLanguages = normalizeTargetLanguages(
     targetLanguages: targetLanguagesFromEnvironment(
       'LOCAL_LLM_TARGET_LANG',
@@ -35,12 +37,12 @@ Future<void> main() async {
     ),
   );
 
-  final client = await resolveLmStudioTranslationClient();
-  if (client is MockTranslationClient) {
+  final baseClient = await resolveLmStudioTranslationClient();
+  if (baseClient is MockTranslationClient) {
     print('LM Studio not reachable — using MockTranslationClient');
     print('Start LM Studio local server at http://127.0.0.1:1234 and retry.');
-  } else if (client is LocalLlmTranslationClient) {
-    final cfg = client.llm.config;
+  } else if (baseClient is LocalLlmTranslationClient) {
+    final cfg = baseClient.llm.config;
     print('LM Studio client: ${cfg.baseUrl} model=${cfg.model}');
   }
 
@@ -70,14 +72,26 @@ Future<void> main() async {
     ),
   ];
 
+  // Q/A entries translate both question (input) and answer (output) per language.
+  const fieldsPerTranslation = 2;
+  final translateSteps =
+      documents.length * targetLanguages.length * fieldsPerTranslation;
+
   print(
     '== ${documents.length} docs × ${targetLanguages.length} languages '
-    '→ up to ${documents.length * (1 + targetLanguages.length)} entries ==',
+    '→ up to ${documents.length * (1 + targetLanguages.length)} entries '
+    '($translateSteps LM calls) ==',
   );
-  print('Translating via LM Studio (this may take several minutes)…');
+
+  final client = ProgressTranslationClient(
+    inner: baseClient,
+    totalSteps: translateSteps,
+    targetLanguages: targetLanguages,
+    fieldsPerLanguage: fieldsPerTranslation,
+  );
 
   final result = await DatasetPipeline(
-    source: MemorySource(documents),
+    source: ProgressDocumentSource(documents),
     generator: QuestionAnswerGenerator(config),
     variations: [
       LlmTranslationVariationGenerator(
@@ -94,6 +108,7 @@ Future<void> main() async {
   ).run();
 
   print(
+    '\n== finished in ${stopwatch.elapsed.inSeconds}s ==\n'
     'stored=${result.entriesStored} rejected=${result.entriesRejected} '
     'generated=${result.entriesGenerated}',
   );
@@ -109,15 +124,17 @@ Future<void> main() async {
     for (final entry in group.value) {
       final kind = entry.isCanonical ? 'canonical' : 'translation';
       print('  [$kind] idx=${entry.variationIndex} lang=${entry.language}');
-      print('    Q: ${entry.input.split('\n').first}');
+      print('    input:\n${_indent(entry.input, 6)}');
       if (entry.output != null && entry.output!.isNotEmpty) {
-        final answer = entry.output!.split('\n').first;
-        print(
-          '    A: ${answer.length > 80 ? '${answer.substring(0, 80)}…' : answer}',
-        );
+        print('    output:\n${_indent(entry.output!, 6)}');
       }
     }
   }
 
   print('\ndone');
+}
+
+String _indent(String text, int spaces) {
+  final pad = ' ' * spaces;
+  return text.split('\n').map((line) => '$pad$line').join('\n');
 }

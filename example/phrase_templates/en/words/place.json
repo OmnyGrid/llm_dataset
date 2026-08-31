@@ -1,0 +1,11 @@
+{
+  "category": "place",
+  "description": "Locations where actions happen",
+  "words": {
+    "office": ["office", "workspace", "desk"],
+    "home": ["home", "house", "apartment"],
+    "library": ["library", "reading room", "archive"],
+    "classroom": ["classroom", "lecture hall", "study room"],
+    "lab": ["lab", "workshop", "studio"]
+  }
+}

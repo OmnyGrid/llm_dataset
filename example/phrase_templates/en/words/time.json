@@ -1,0 +1,11 @@
+{
+  "category": "time",
+  "description": "Times of day",
+  "words": {
+    "morning": ["morning", "early hours", "start of the day"],
+    "evening": ["evening", "late afternoon", "dusk"],
+    "afternoon": ["afternoon", "midday", "after lunch"],
+    "night": ["night", "late hours", "after dark"],
+    "noon": ["noon", "midday", "lunch hour"]
+  }
+}

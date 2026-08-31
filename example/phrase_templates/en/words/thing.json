@@ -1,0 +1,15 @@
+{
+  "category": "thing",
+  "description": "Objects, artifacts, and deliverables",
+  "words": {
+    "code": ["code", "software", "program"],
+    "feature": ["feature", "capability", "function"],
+    "bug": ["bug", "defect", "issue"],
+    "document": ["document", "file", "record"],
+    "report": ["report", "summary", "brief"],
+    "blueprint": ["blueprint", "design", "layout"],
+    "api": ["API", "endpoint", "interface"],
+    "database": ["database", "data store", "schema"],
+    "module": ["module", "component", "package"]
+  }
+}

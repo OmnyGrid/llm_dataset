@@ -1,0 +1,10 @@
+{
+  "category": "activity",
+  "description": "Activities and work types",
+  "words": {
+    "exercise": ["exercise", "training", "practice"],
+    "work": ["work", "job", "tasks"],
+    "meeting": ["meeting", "stand-up", "sync"],
+    "study": ["study", "learning session", "revision"]
+  }
+}

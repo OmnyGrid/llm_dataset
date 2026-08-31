@@ -1,0 +1,11 @@
+{
+  "category": "manner",
+  "description": "Adverbs describing how an action is performed",
+  "words": {
+    "carefully": ["carefully", "thoroughly", "attentively"],
+    "quickly": ["quickly", "rapidly", "swiftly"],
+    "slowly": ["slowly", "gradually", "step by step"],
+    "quietly": ["quietly", "silently", "without noise"],
+    "efficiently": ["efficiently", "productively", "with focus"]
+  }
+}
