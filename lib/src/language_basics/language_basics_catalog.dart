@@ -1,9 +1,14 @@
+import '../exercise/exercise_catalog.dart';
+import '../model/exercise_metadata.dart';
 import '../source/dataset_source.dart';
 import '../text_exercise/text_build.dart';
 import '../text_exercise/text_lexicon.dart';
 
 /// Catalog of simple language-basics patterns for initial curriculum stages.
-class LanguageBasicsCatalog {
+///
+/// Intentionally simpler than [PhraseGenerator] / JSON phrase templates — see
+/// `doc/ARCHITECTURE.md` for how the three phrase tiers relate.
+class LanguageBasicsCatalog implements ExerciseCatalog<PhrasePatternConfig> {
   /// Creates a catalog.
   const LanguageBasicsCatalog({
     required this.profile,
@@ -21,6 +26,7 @@ class LanguageBasicsCatalog {
   final TextLexicon lexicon;
 
   /// Source documents for pipeline consumption.
+  @override
   List<DatasetSourceDocument> documents() {
     return [
       for (final pattern in patterns)
@@ -30,15 +36,16 @@ class LanguageBasicsCatalog {
           title: pattern.id,
           language: lexicon.language,
           metadata: {
-            'textKind': 'language_basics',
-            'patternId': pattern.id,
-            'complexityTier': 0,
+            TextExerciseMetadata.textKind: TextExerciseMetadata.languageBasics,
+            ExerciseMetadataKeys.patternId: pattern.id,
+            ExerciseMetadataKeys.complexityTier: 0,
           },
         ),
     ];
   }
 
   /// Patterns keyed by id.
+  @override
   Map<String, PhrasePatternConfig> patternMap() {
     return {for (final pattern in patterns) pattern.id: pattern};
   }

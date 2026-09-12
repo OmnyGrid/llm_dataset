@@ -1,3 +1,5 @@
+import '../exercise/exercise_catalog.dart';
+import '../model/exercise_metadata.dart';
 import '../source/dataset_source.dart';
 
 /// Kind of logic exercise pattern.
@@ -47,7 +49,7 @@ class LogicPatternConfig {
 }
 
 /// Catalog of built-in logic exercises.
-class LogicExerciseCatalog {
+class LogicExerciseCatalog implements ExerciseCatalog<LogicPatternConfig> {
   /// Creates a catalog.
   const LogicExerciseCatalog({required this.patterns, required this.language});
 
@@ -58,6 +60,7 @@ class LogicExerciseCatalog {
   final String language;
 
   /// Source documents for the pipeline.
+  @override
   List<DatasetSourceDocument> documents() {
     return [
       for (final pattern in patterns)
@@ -67,15 +70,16 @@ class LogicExerciseCatalog {
           title: pattern.id,
           language: language,
           metadata: {
-            'exerciseKind': pattern.kind.name,
-            'patternId': pattern.id,
-            'complexityTier': pattern.complexityTier,
+            ExerciseMetadataKeys.exerciseKind: pattern.kind.name,
+            ExerciseMetadataKeys.patternId: pattern.id,
+            ExerciseMetadataKeys.complexityTier: pattern.complexityTier,
           },
         ),
     ];
   }
 
   /// Patterns keyed by id.
+  @override
   Map<String, LogicPatternConfig> patternMap() {
     return {for (final pattern in patterns) pattern.id: pattern};
   }

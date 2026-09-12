@@ -1,3 +1,27 @@
+## Unreleased
+
+### Added
+- `CurriculumPhaseDataset` — `CurriculumDataset.mixed()` now interleaves review
+  entries via `Dataset.stream` / `batches`
+- `ExerciseMetadataKeys`, `ExerciseCatalog`, `CatalogExerciseGenerator` shared
+  exercise abstractions
+- `DatasetStoreCapabilities` extension (`configureBulkInsertIfSupported`,
+  `listDistinctMetadataValues`)
+- `CurriculumLifecycle.stageStats()` for per-stage entry counts
+- `doc/ARCHITECTURE.md`, `CONTRIBUTING.md`, `test/fixtures/` for CI/tests
+- Query, lifecycle, mixed-phase, and exception tests
+
+### Changed
+- `CurriculumBuilder.failIfVersionExists` defaults to `true` (aligned with
+  `DatasetPipeline`)
+- Public exports deduplicated in `lib/llm_dataset.dart` (exercise modules via
+  `curriculum_api.dart` only)
+- Metadata keys consolidated under `ExerciseMetadataKeys` / `TextExerciseMetadata`
+- Tests load curriculum and phrase templates from `test/fixtures/`
+
+### Fixed
+- `CurriculumDataset.mixed()` no longer ignores manifest review mixing policy
+
 ## 1.3.0
 
 ### Added

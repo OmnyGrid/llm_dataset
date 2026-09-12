@@ -1,4 +1,6 @@
+import '../exercise/catalog_exercise_generator.dart';
 import '../generator/dataset_generator.dart';
+import '../model/exercise_metadata.dart';
 import '../generator/generator_helpers.dart';
 import '../model/dataset_entry.dart';
 import '../model/dataset_entry_type.dart';
@@ -6,7 +8,9 @@ import '../source/dataset_source.dart';
 import 'logic_exercise_catalog.dart';
 
 /// Builds logic exercise entries from [LogicPatternConfig] definitions.
-class LogicExerciseGenerator implements DatasetGenerator {
+class LogicExerciseGenerator
+    with CatalogExerciseGenerator<LogicPatternConfig>
+    implements DatasetGenerator {
   /// Creates a logic generator.
   LogicExerciseGenerator({
     required this.config,
@@ -28,14 +32,11 @@ class LogicExerciseGenerator implements DatasetGenerator {
   final String generatorVersion;
 
   @override
+  Map<String, LogicPatternConfig> get patternMap => patterns;
+
+  @override
   Stream<DatasetEntry> generate(DatasetSourceDocument document) async* {
-    final pattern = patterns[document.id];
-    if (pattern == null) {
-      throw ArgumentError(
-        'Unknown logic pattern "${document.id}". '
-        'Known: ${patterns.keys.join(', ')}',
-      );
-    }
+    final pattern = requirePattern(document);
 
     final hasThinking =
         pattern.thinking != null && pattern.thinking!.isNotEmpty;
@@ -51,10 +52,10 @@ class LogicExerciseGenerator implements DatasetGenerator {
       input: pattern.prompt,
       output: output,
       extraMetadata: {
-        'exerciseKind': pattern.kind.name,
-        'patternId': pattern.id,
+        ExerciseMetadataKeys.exerciseKind: pattern.kind.name,
+        ExerciseMetadataKeys.patternId: pattern.id,
         'answer': pattern.answer,
-        'complexityTier': pattern.complexityTier,
+        ExerciseMetadataKeys.complexityTier: pattern.complexityTier,
         'seed': seed,
       },
     );

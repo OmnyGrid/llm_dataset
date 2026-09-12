@@ -1,0 +1,10 @@
+{
+  "category": "drink",
+  "description": "Beverages",
+  "words": {
+    "coffee": ["coffee", "a hot drink", "espresso"],
+    "tea": ["tea", "green tea", "herbal tea"],
+    "water": ["water", "a glass of water", "cold water"],
+    "juice": ["juice", "orange juice", "fresh juice"]
+  }
+}

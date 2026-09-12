@@ -10,11 +10,16 @@ Future<void> main(List<String> args) async {
   final outputPath = args.isNotEmpty ? args.first : 'curriculum.db';
   final manifestPath = 'example/curriculum/curriculum.json';
 
+  if (File(outputPath).existsSync()) {
+    stdout.writeln('Removing existing database: $outputPath');
+    File(outputPath).deleteSync();
+  }
+
   stdout.writeln('Loading manifest: $manifestPath');
   final manifest = await CurriculumManifest.loadFile(manifestPath);
 
   final store = SqliteDatasetStore(outputPath);
-  store.configureForBulkInsert();
+  store.configureBulkInsertIfSupported();
 
   final builder = CurriculumBuilder(
     manifest: manifest,

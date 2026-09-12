@@ -1,7 +1,7 @@
 import '../model/dataset_entry.dart';
 import '../serialization/dataset_codec.dart';
 import '../store/dataset_store.dart';
-import '../store/sqlite_dataset_store.dart';
+import '../store/dataset_store_capabilities.dart';
 import 'curriculum_dataset.dart';
 import 'curriculum_manifest.dart';
 import 'curriculum_metadata.dart';
@@ -20,21 +20,18 @@ class CurriculumLifecycle {
 
   /// Lists distinct curriculum stage ids present in the store.
   Future<List<String>> listStages() async {
-    if (store is SqliteDatasetStore) {
-      return (store as SqliteDatasetStore).listDistinctMetadataValues(
-        CurriculumMetadataKeys.curriculumStage,
-      );
-    }
+    return store.listDistinctMetadataValues(
+      CurriculumMetadataKeys.curriculumStage,
+    );
+  }
 
-    final stages = <String>{};
-    await for (final entry in store.stream()) {
-      final stage = entry.metadata[CurriculumMetadataKeys.curriculumStage];
-      if (stage is String && stage.isNotEmpty) {
-        stages.add(stage);
-      }
+  /// Counts entries per manifest stage present in [store].
+  Future<Map<String, int>> stageStats() async {
+    final stats = <String, int>{};
+    for (final stage in manifest.stages) {
+      stats[stage.id] = await countStage(stage.id);
     }
-    final list = stages.toList()..sort();
-    return list;
+    return stats;
   }
 
   /// Counts entries tagged with [stageId].

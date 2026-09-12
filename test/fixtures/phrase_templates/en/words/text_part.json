@@ -1,0 +1,10 @@
+{
+  "category": "text_part",
+  "description": "Units of written text",
+  "words": {
+    "sentence": ["sentence", "line", "phrase"],
+    "paragraph": ["paragraph", "passage", "text block"],
+    "chapter": ["chapter", "section", "part"],
+    "article": ["article", "essay", "post"]
+  }
+}

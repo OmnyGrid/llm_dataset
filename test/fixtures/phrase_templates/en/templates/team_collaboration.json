@@ -1,0 +1,81 @@
+{
+  "group": "team_collaboration",
+  "description": "Team work and role-based phrases",
+  "templates": [
+    {
+      "id": "ext-team-meeting",
+      "template": "The {subject} {adverb} {verb} a {activity} in the {place}.",
+      "structureVariants": [
+        "In the {place}, the {subject} {adverb} {verb} a {activity}.",
+        "A {activity} is {adverb} {verb} by the {subject} in the {place}."
+      ],
+      "slotCategories": {
+        "subject": "actor",
+        "adverb": "manner",
+        "verb": "action",
+        "activity": "activity",
+        "place": "place"
+      }
+    },
+    {
+      "id": "ext-manager-review",
+      "template": "The {subject} {verb} the {object} with the {tool} at {place}.",
+      "structureVariants": [
+        "At {place}, the {subject} {verb} the {object} with the {tool}.",
+        "The {object} is {verb} by the {subject} with the {tool} at {place}."
+      ],
+      "slotCategories": {
+        "subject": "actor",
+        "verb": "action",
+        "object": "thing",
+        "tool": "tool",
+        "place": "place"
+      }
+    },
+    {
+      "id": "ext-analyst-report",
+      "template": "The {subject} {adverb} {verb} a {object} about the {milestone}.",
+      "structureVariants": [
+        "About the {milestone}, the {subject} {adverb} {verb} a {object}.",
+        "A {object} about the {milestone} is {adverb} {verb} by the {subject}."
+      ],
+      "slotCategories": {
+        "subject": "actor",
+        "adverb": "manner",
+        "verb": "action",
+        "object": "thing",
+        "milestone": "milestone"
+      }
+    },
+    {
+      "id": "ext-designer-blueprint",
+      "template": "The {subject} {adverb} {verb} a {object} for the new {thing}.",
+      "structureVariants": [
+        "For the new {thing}, the {subject} {adverb} {verb} a {object}.",
+        "A {object} for the new {thing} is {adverb} {verb} by the {subject}."
+      ],
+      "slotCategories": {
+        "subject": "actor",
+        "adverb": "manner",
+        "verb": "action",
+        "object": "thing",
+        "thing": "thing"
+      }
+    },
+    {
+      "id": "ext-writer-draft",
+      "template": "The {subject} {verb} a {language} {text_unit} on the {tool}.",
+      "structureVariants": [
+        "On the {tool}, the {subject} {verb} a {language} {text_unit}.",
+        "A {language} {text_unit} is {verb} by the {subject} on the {tool}."
+      ],
+      "slotCategories": {
+        "subject": "actor",
+        "verb": "action",
+        "language": "language",
+        "text_unit": "text_part",
+        "tool": "tool"
+      }
+    }
+  ]
+}

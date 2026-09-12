@@ -64,7 +64,7 @@ jobs:
 
       - name: Generate coverage report
         run: |
-          dart pub global activate coverage
+          dart pub global activate coverage 1.15.0
           dart pub global run coverage:format_coverage \
             --packages=.dart_tool/package_config.json \
             --report-on=lib \

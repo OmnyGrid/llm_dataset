@@ -27,8 +27,8 @@ class PhraseGenerator implements DatasetGenerator {
     this.generatorVersion = '1.0.0',
   });
 
-  /// Shared generator configuration ([GeneratorConfig.language] should match
-  /// [lexicon.language]).
+  /// Shared generator configuration (`config.language` should match
+  /// `lexicon.language`).
   final GeneratorConfig config;
 
   /// Phrase patterns keyed by [PhrasePatternConfig.id].

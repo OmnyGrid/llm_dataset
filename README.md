@@ -222,8 +222,7 @@ variations: [
 ```
 
 See [`example/translation_target_languages.dart`](example/translation_target_languages.dart)
-for [`normalizeTargetLanguages`](lib/src/variation/translation_variation_generator.dart)
-usage.
+for `normalizeTargetLanguages` usage (exported from the public API).
 
 ### Validation
 
@@ -265,8 +264,10 @@ await lifecycle.deleteDataset('geography', version: 'v0');
 ```
 
 Record `dataset` + `datasetVersion`, `pipelineVersion`, generator versions, and
-seeds alongside every export. The pipeline refuses to silently overwrite an
-existing dataset version when `failIfVersionExists` is true (default).
+seeds alongside every export. Both `DatasetPipeline` and `CurriculumBuilder`
+refuse to silently overwrite an existing dataset version when
+`failIfVersionExists` is true (default). Pass `failIfVersionExists: false` to
+rebuild into the same version.
 
 ### Progressive curriculum training
 

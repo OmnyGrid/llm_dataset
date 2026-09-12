@@ -1,3 +1,5 @@
+// Facade over hardcoded phrase template library patterns and paragraph configs.
+// For JSON-backed corpora use PhraseTemplateStore. See doc/ARCHITECTURE.md.
 import '../source/dataset_source.dart';
 import '../source/memory_source.dart';
 import 'phrase_template_library.dart';

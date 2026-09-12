@@ -1,3 +1,5 @@
+import '../exercise/exercise_catalog.dart';
+import '../model/exercise_metadata.dart';
 import '../source/dataset_source.dart';
 
 /// Kind of coding exercise pattern.
@@ -47,7 +49,7 @@ class CodingPatternConfig {
 }
 
 /// Catalog of built-in coding exercises.
-class CodingExerciseCatalog {
+class CodingExerciseCatalog implements ExerciseCatalog<CodingPatternConfig> {
   /// Creates a catalog.
   const CodingExerciseCatalog({required this.patterns, required this.language});
 
@@ -58,6 +60,7 @@ class CodingExerciseCatalog {
   final String language;
 
   /// Source documents for the pipeline.
+  @override
   List<DatasetSourceDocument> documents() {
     return [
       for (final pattern in patterns)
@@ -67,16 +70,17 @@ class CodingExerciseCatalog {
           title: pattern.id,
           language: 'en',
           metadata: {
-            'exerciseKind': pattern.kind.name,
+            ExerciseMetadataKeys.exerciseKind: pattern.kind.name,
             'codingLanguage': pattern.language,
-            'patternId': pattern.id,
-            'complexityTier': pattern.complexityTier,
+            ExerciseMetadataKeys.patternId: pattern.id,
+            ExerciseMetadataKeys.complexityTier: pattern.complexityTier,
           },
         ),
     ];
   }
 
   /// Patterns keyed by id.
+  @override
   Map<String, CodingPatternConfig> patternMap() {
     return {for (final pattern in patterns) pattern.id: pattern};
   }

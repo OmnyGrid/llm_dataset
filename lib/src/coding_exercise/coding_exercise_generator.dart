@@ -1,4 +1,6 @@
+import '../exercise/catalog_exercise_generator.dart';
 import '../generator/dataset_generator.dart';
+import '../model/exercise_metadata.dart';
 import '../generator/generator_helpers.dart';
 import '../model/dataset_entry.dart';
 import '../model/dataset_entry_type.dart';
@@ -6,7 +8,9 @@ import '../source/dataset_source.dart';
 import 'coding_exercise_catalog.dart';
 
 /// Builds coding exercise entries from [CodingPatternConfig] definitions.
-class CodingExerciseGenerator implements DatasetGenerator {
+class CodingExerciseGenerator
+    with CatalogExerciseGenerator<CodingPatternConfig>
+    implements DatasetGenerator {
   /// Creates a coding generator.
   CodingExerciseGenerator({
     required this.config,
@@ -24,14 +28,11 @@ class CodingExerciseGenerator implements DatasetGenerator {
   final String generatorVersion;
 
   @override
+  Map<String, CodingPatternConfig> get patternMap => patterns;
+
+  @override
   Stream<DatasetEntry> generate(DatasetSourceDocument document) async* {
-    final pattern = patterns[document.id];
-    if (pattern == null) {
-      throw ArgumentError(
-        'Unknown coding pattern "${document.id}". '
-        'Known: ${patterns.keys.join(', ')}',
-      );
-    }
+    final pattern = requirePattern(document);
 
     yield buildCanonicalEntry(
       config: config,
@@ -41,10 +42,10 @@ class CodingExerciseGenerator implements DatasetGenerator {
       input: pattern.prompt,
       output: pattern.solution,
       extraMetadata: {
-        'exerciseKind': pattern.kind.name,
+        ExerciseMetadataKeys.exerciseKind: pattern.kind.name,
         'codingLanguage': pattern.language,
-        'patternId': pattern.id,
-        'complexityTier': pattern.complexityTier,
+        ExerciseMetadataKeys.patternId: pattern.id,
+        ExerciseMetadataKeys.complexityTier: pattern.complexityTier,
       },
     );
   }

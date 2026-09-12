@@ -177,6 +177,9 @@ String buildFromTemplate(String template, Map<String, String> slots) {
 /// Metadata keys stored on generated text entries for variation rebuild.
 abstract final class TextExerciseMetadata {
   static const textKind = 'textKind';
+
+  /// [textKind] value for early curriculum phrase drills.
+  static const languageBasics = 'language_basics';
   static const template = 'textTemplate';
   static const slots = 'textSlots';
   static const semanticKeys = 'textSemanticKeys';

@@ -133,7 +133,7 @@ void main() {
 
     test('loadFile reads example manifest', () async {
       final manifest = await CurriculumManifest.loadFile(
-        'example/curriculum/curriculum.json',
+        'test/fixtures/curriculum/curriculum.json',
       );
 
       expect(manifest.id, 'shallow-progressive-v1');

@@ -33,7 +33,7 @@ class CurriculumTaggingGenerator implements DatasetGenerator {
   Stream<DatasetEntry> generate(DatasetSourceDocument document) async* {
     await for (final entry in inner.generate(document)) {
       final tier =
-          entry.metadata[CurriculumMetadataKeys.complexityTier] as int? ??
+          entry.metadata[ExerciseMetadataKeys.complexityTier] as int? ??
           defaultComplexityTier;
       yield entry.copyWith(
         metadata: {

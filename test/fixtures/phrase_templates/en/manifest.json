@@ -1,0 +1,27 @@
+{
+  "language": "en",
+  "version": "1.0.0",
+  "description": "Extended phrase template dataset for phrase_template_categories example",
+  "wordSets": [
+    "words/actor.json",
+    "words/action.json",
+    "words/thing.json",
+    "words/manner.json",
+    "words/time.json",
+    "words/drink.json",
+    "words/meal.json",
+    "words/language.json",
+    "words/text_part.json",
+    "words/activity.json",
+    "words/place.json",
+    "words/tool.json",
+    "words/milestone.json"
+  ],
+  "templateGroups": [
+    "templates/development.json",
+    "templates/learning.json",
+    "templates/daily_routine.json",
+    "templates/team_collaboration.json",
+    "templates/quality_infrastructure.json"
+  ]
+}

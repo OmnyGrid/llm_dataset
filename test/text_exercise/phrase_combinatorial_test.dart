@@ -250,7 +250,7 @@ void main() {
 
     test('uses structure variants from loaded store templates', () async {
       final localeDir = Directory(
-        '${Directory.current.path}/example/phrase_templates/en',
+        '${Directory.current.path}/test/fixtures/phrase_templates/en',
       );
       final store = await PhraseTemplateStoreLoader(localeDirectory: localeDir)
           .load();

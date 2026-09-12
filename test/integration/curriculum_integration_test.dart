@@ -18,7 +18,7 @@ void main() {
 
     setUp(() async {
       manifest = await CurriculumManifest.loadFile(
-        'example/curriculum/curriculum.json',
+        'test/fixtures/curriculum/curriculum.json',
       );
       store = MemoryDatasetStore();
     });
@@ -152,7 +152,7 @@ void main() {
 
     test('buildAll export and listStages via SQLite', () async {
       final manifest = await CurriculumManifest.loadFile(
-        'example/curriculum/curriculum.json',
+        'test/fixtures/curriculum/curriculum.json',
       );
       final store = SqliteDatasetStore(dbFile.path);
       addTearDown(store.close);

@@ -1,6 +1,7 @@
 export 'curriculum_build_result.dart';
 export 'curriculum_builder.dart';
 export 'curriculum_dataset.dart';
+export 'curriculum_phase_dataset.dart';
 export 'curriculum_exception.dart';
 export 'curriculum_lifecycle.dart';
 export 'curriculum_manifest.dart';

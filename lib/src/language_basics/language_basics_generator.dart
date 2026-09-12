@@ -1,4 +1,6 @@
+import '../exercise/catalog_exercise_generator.dart';
 import '../generator/dataset_generator.dart';
+import '../model/exercise_metadata.dart';
 import '../generator/generator_helpers.dart';
 import '../model/dataset_entry.dart';
 import '../model/dataset_entry_type.dart';
@@ -7,7 +9,9 @@ import '../text_exercise/text_build.dart';
 import '../text_exercise/text_lexicon.dart';
 
 /// Builds simplest phrase entries for early curriculum stages.
-class LanguageBasicsGenerator implements DatasetGenerator {
+class LanguageBasicsGenerator
+    with CatalogExerciseGenerator<PhrasePatternConfig>
+    implements DatasetGenerator {
   /// Creates a language-basics generator.
   LanguageBasicsGenerator({
     required this.config,
@@ -29,14 +33,11 @@ class LanguageBasicsGenerator implements DatasetGenerator {
   final String generatorVersion;
 
   @override
+  Map<String, PhrasePatternConfig> get patternMap => patterns;
+
+  @override
   Stream<DatasetEntry> generate(DatasetSourceDocument document) async* {
-    final pattern = patterns[document.id];
-    if (pattern == null) {
-      throw ArgumentError(
-        'Unknown language_basics pattern "${document.id}". '
-        'Known: ${patterns.keys.join(', ')}',
-      );
-    }
+    final pattern = requirePattern(document);
 
     final slots = pattern.resolveSlots(lexicon);
     final semanticKeys = pattern.resolveSemanticKeys();
@@ -56,8 +57,8 @@ class LanguageBasicsGenerator implements DatasetGenerator {
           slots: slots,
           semanticKeys: semanticKeys,
         ),
-        'textKind': 'language_basics',
-        'complexityTier': 0,
+        TextExerciseMetadata.textKind: TextExerciseMetadata.languageBasics,
+        ExerciseMetadataKeys.complexityTier: 0,
       },
     );
   }

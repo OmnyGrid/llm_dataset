@@ -1,0 +1,89 @@
+{
+  "id": "shallow-progressive-v1",
+  "initialLayers": 2,
+  "stages": [
+    {
+      "id": "language_basics",
+      "order": 0,
+      "layersWhenActive": 2,
+      "dataset": "curriculum",
+      "datasetVersion": "language_basics-v1",
+      "mixing": { "mode": "exclusive" },
+      "sources": [
+        { "kind": "language_basics", "locale": "en", "profile": "generic" }
+      ]
+    },
+    {
+      "id": "phrases",
+      "order": 1,
+      "layersWhenActive": 4,
+      "dataset": "curriculum",
+      "datasetVersion": "phrases-v1",
+      "mixing": {
+        "mode": "mixed",
+        "reviewStages": ["language_basics"],
+        "reviewRatio": 0.15
+      },
+      "sources": [
+        {
+          "kind": "phrase_templates",
+          "locale": "en",
+          "storePath": "test/fixtures/phrase_templates/en",
+          "combinatorial": false
+        }
+      ]
+    },
+    {
+      "id": "paragraphs",
+      "order": 2,
+      "layersWhenActive": 6,
+      "dataset": "curriculum",
+      "datasetVersion": "paragraphs-v1",
+      "mixing": {
+        "mode": "mixed",
+        "reviewStages": ["phrases"],
+        "reviewRatio": 0.1
+      },
+      "sources": [{ "kind": "paragraph_catalog", "locale": "en" }]
+    },
+    {
+      "id": "math",
+      "order": 3,
+      "layersWhenActive": 8,
+      "dataset": "curriculum",
+      "datasetVersion": "math-v1",
+      "mixing": {
+        "mode": "mixed",
+        "reviewStages": ["paragraphs"],
+        "reviewRatio": 0.1
+      },
+      "sources": [{ "kind": "math_catalog", "locale": "en" }]
+    },
+    {
+      "id": "logic",
+      "order": 4,
+      "layersWhenActive": 10,
+      "dataset": "curriculum",
+      "datasetVersion": "logic-v1",
+      "mixing": {
+        "mode": "mixed",
+        "reviewStages": ["math"],
+        "reviewRatio": 0.1
+      },
+      "sources": [{ "kind": "logic_catalog", "locale": "en" }]
+    },
+    {
+      "id": "coding",
+      "order": 5,
+      "layersWhenActive": 12,
+      "dataset": "curriculum",
+      "datasetVersion": "coding-v1",
+      "mixing": {
+        "mode": "mixed",
+        "reviewStages": ["logic"],
+        "reviewRatio": 0.1
+      },
+      "sources": [{ "kind": "coding_catalog", "language": "python" }]
+    }
+  ]
+}

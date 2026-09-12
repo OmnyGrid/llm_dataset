@@ -1,6 +1,7 @@
 import '../generator/dataset_generator.dart';
 import '../pipeline/dataset_pipeline.dart';
 import '../store/dataset_store.dart';
+import '../store/dataset_store_capabilities.dart';
 import 'curriculum_build_result.dart';
 import 'curriculum_manifest.dart';
 import 'curriculum_stage_builder_registry.dart';
@@ -16,7 +17,7 @@ class CurriculumBuilder {
     this.registry,
     this.seed,
     this.variationOptions,
-    this.failIfVersionExists = false,
+    this.failIfVersionExists = true, // matches DatasetPipeline default
     this.configureBulkInsert = true,
   });
 
@@ -128,11 +129,6 @@ class CurriculumBuilder {
   }
 
   void _maybeConfigureBulkInsert() {
-    final dynamic maybeSqlite = store;
-    try {
-      maybeSqlite.configureForBulkInsert();
-    } on NoSuchMethodError {
-      // Not a SqliteDatasetStore.
-    }
+    store.configureBulkInsertIfSupported();
   }
 }

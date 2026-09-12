@@ -3,6 +3,7 @@ import '../store/dataset_store.dart';
 import '../training/dataset.dart';
 import 'curriculum_manifest.dart';
 import 'curriculum_mixing.dart';
+import 'curriculum_phase_dataset.dart';
 
 /// Training consumption API for curriculum-tagged dataset slices.
 class CurriculumDataset {
@@ -27,14 +28,19 @@ class CurriculumDataset {
   /// Entries for [stageId] mixed with configured review stages.
   ///
   /// When the stage mixing mode is `exclusive`, behaves like [exclusive].
+  /// For mixed stages, returns [CurriculumPhaseDataset] whose [Dataset.stream]
+  /// and [Dataset.batches] interleave review entries per the manifest.
   Dataset mixed(String stageId, {int? seed}) {
+    _assertKnownStage(stageId);
     final stage = manifest.stage(stageId);
     if (stage.mixing.isExclusive) {
       return exclusive(stageId);
     }
-    return Dataset(
+    return CurriculumPhaseDataset(
       store: store,
-      query: CurriculumMixing.stageQuery(store, stageId),
+      manifest: manifest,
+      stageId: stageId,
+      mixingSeed: seed,
     );
   }
 

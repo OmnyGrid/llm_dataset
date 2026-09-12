@@ -1,0 +1,9 @@
+{
+  "category": "milestone",
+  "description": "Deadlines and release milestones",
+  "words": {
+    "deadline": ["deadline", "due date", "cutoff"],
+    "release": ["release", "launch", "rollout"],
+    "sprint": ["sprint", "iteration", "cycle"]
+  }
+}

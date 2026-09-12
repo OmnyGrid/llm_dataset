@@ -1,0 +1,14 @@
+{
+  "category": "actor",
+  "description": "People who perform actions in a phrase",
+  "words": {
+    "developer": ["developer", "engineer", "programmer"],
+    "team": ["team", "group", "crew"],
+    "student": ["student", "learner", "pupil"],
+    "manager": ["manager", "lead", "supervisor"],
+    "designer": ["designer", "creator", "artist"],
+    "analyst": ["analyst", "researcher", "investigator"],
+    "writer": ["writer", "author", "editor"],
+    "teacher": ["teacher", "instructor", "tutor"]
+  }
+}

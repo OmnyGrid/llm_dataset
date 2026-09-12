@@ -128,7 +128,7 @@ void main() {
               {
                 'kind': 'phrase_templates',
                 'locale': 'en',
-                'storePath': 'example/phrase_templates/en',
+                'storePath': 'test/fixtures/phrase_templates/en',
               },
             ],
           },
@@ -237,7 +237,7 @@ void main() {
               {
                 'kind': 'phrase_templates',
                 'locale': 'en',
-                'storePath': 'example/phrase_templates/en',
+                'storePath': 'test/fixtures/phrase_templates/en',
               },
             ],
           },

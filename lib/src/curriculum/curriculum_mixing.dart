@@ -114,7 +114,7 @@ abstract final class CurriculumMixing {
     }
   }
 
-  /// Resolves primary and review queries from [stage] in [manifest].
+  /// Resolves primary and review queries for [stageId] in [manifest].
   static ({
     DatasetQuery primary,
     List<DatasetQuery> reviewQueries,

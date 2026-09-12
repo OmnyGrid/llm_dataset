@@ -8,7 +8,7 @@ void main() {
 
   setUp(() {
     localeDir = Directory(
-      '${Directory.current.path}/example/phrase_templates/en',
+      '${Directory.current.path}/test/fixtures/phrase_templates/en',
     );
   });
 

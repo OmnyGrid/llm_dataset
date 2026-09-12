@@ -42,7 +42,7 @@ void main() {
         'language_basics',
       );
       expect(entry.metadata[CurriculumMetadataKeys.curriculumStageOrder], 0);
-      expect(entry.metadata[CurriculumMetadataKeys.complexityTier], 0);
+      expect(entry.metadata[ExerciseMetadataKeys.complexityTier], 0);
     });
 
     test('preserves complexityTier from entry metadata', () async {
@@ -58,7 +58,7 @@ void main() {
           .generate(DatasetSourceDocument(id: 'x', content: 'x'))
           .first;
 
-      expect(entry.metadata[CurriculumMetadataKeys.complexityTier], 2);
+      expect(entry.metadata[ExerciseMetadataKeys.complexityTier], 2);
     });
   });
 }

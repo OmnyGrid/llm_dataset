@@ -1,0 +1,148 @@
+{
+  "group": "development",
+  "description": "Software development and shipping phrases",
+  "templates": [
+    {
+      "id": "ext-action-object",
+      "template": "The {subject} {adverb} {verb} the {object}.",
+      "structureVariants": [
+        "{adverb}, the {subject} {verb} the {object}.",
+        "The {object} is {adverb} {verb} by the {subject}."
+      ],
+      "slotCategories": {
+        "subject": "actor",
+        "adverb": "manner",
+        "verb": "action",
+        "object": "thing"
+      }
+    },
+    {
+      "id": "ext-ship-new",
+      "template": "The {subject} {verb} a new {object} before the {milestone}.",
+      "structureVariants": [
+        "Before the {milestone}, the {subject} {verb} a new {object}.",
+        "A new {object} is {verb} by the {subject} before the {milestone}."
+      ],
+      "slotCategories": {
+        "subject": "actor",
+        "verb": "action",
+        "object": "thing",
+        "milestone": "milestone"
+      }
+    },
+    {
+      "id": "ext-clean-code",
+      "template": "The {subject} {verb} clean {object} in the {place}.",
+      "structureVariants": [
+        "In the {place}, the {subject} {verb} clean {object}.",
+        "Clean {object} is {verb} by the {subject} in the {place}."
+      ],
+      "slotCategories": {
+        "subject": "actor",
+        "verb": "action",
+        "object": "thing",
+        "place": "place"
+      }
+    },
+    {
+      "id": "ext-test-each",
+      "template": "The {subject} {adverb} {verb} each {object} in the {place}.",
+      "structureVariants": [
+        "In the {place}, the {subject} {adverb} {verb} each {object}.",
+        "Each {object} is {adverb} {verb} by the {subject} in the {place}."
+      ],
+      "slotCategories": {
+        "subject": "actor",
+        "adverb": "manner",
+        "verb": "action",
+        "object": "thing",
+        "place": "place"
+      }
+    },
+    {
+      "id": "ext-debug-bug",
+      "template": "The {subject} {adverb} {verb} a {object} on the {tool}.",
+      "structureVariants": [
+        "On the {tool}, the {subject} {adverb} {verb} a {object}.",
+        "A {object} is {adverb} {verb} by the {subject} on the {tool}."
+      ],
+      "slotCategories": {
+        "subject": "actor",
+        "adverb": "manner",
+        "verb": "action",
+        "object": "thing",
+        "tool": "tool"
+      }
+    },
+    {
+      "id": "ext-deploy-release",
+      "template": "Before the {milestone}, the {subject} {verb} the {object}.",
+      "structureVariants": [
+        "The {subject} {verb} the {object} before the {milestone}.",
+        "The {object} is {verb} by the {subject} before the {milestone}."
+      ],
+      "slotCategories": {
+        "milestone": "milestone",
+        "subject": "actor",
+        "verb": "action",
+        "object": "thing"
+      }
+    },
+    {
+      "id": "ext-review-report",
+      "template": "The {subject} {adverb} {verb} the {object} for the {milestone}.",
+      "structureVariants": [
+        "For the {milestone}, the {subject} {adverb} {verb} the {object}.",
+        "The {object} is {adverb} {verb} by the {subject} for the {milestone}."
+      ],
+      "slotCategories": {
+        "subject": "actor",
+        "adverb": "manner",
+        "verb": "action",
+        "object": "thing",
+        "milestone": "milestone"
+      }
+    },
+    {
+      "id": "ext-plan-sprint",
+      "template": "The {subject} {verb} the next {milestone} with the {tool}.",
+      "structureVariants": [
+        "With the {tool}, the {subject} {verb} the next {milestone}.",
+        "The next {milestone} is {verb} by the {subject} with the {tool}."
+      ],
+      "slotCategories": {
+        "subject": "actor",
+        "verb": "action",
+        "milestone": "milestone",
+        "tool": "tool"
+      }
+    },
+    {
+      "id": "ext-found-issue",
+      "template": "The {subject} found a {object} in the {artifact} during {activity}.",
+      "structureVariants": [
+        "During {activity}, the {subject} found a {object} in the {artifact}.",
+        "A {object} was found by the {subject} in the {artifact} during {activity}."
+      ],
+      "slotCategories": {
+        "subject": "actor",
+        "object": "thing",
+        "artifact": "thing",
+        "activity": "activity"
+      }
+    },
+    {
+      "id": "ext-must-test",
+      "template": "The {subject} must {verb} every {object} before shipping.",
+      "structureVariants": [
+        "Before shipping, the {subject} must {verb} every {object}.",
+        "Every {object} must be {verb} by the {subject} before shipping."
+      ],
+      "slotCategories": {
+        "subject": "actor",
+        "verb": "action",
+        "object": "thing"
+      }
+    }
+  ]
+}

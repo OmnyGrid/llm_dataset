@@ -1,3 +1,5 @@
+import '../exercise/exercise_catalog.dart';
+import '../model/exercise_metadata.dart';
 import '../source/dataset_source.dart';
 
 /// Kind of math exercise pattern.
@@ -44,7 +46,7 @@ class MathPatternConfig {
 }
 
 /// Catalog of built-in math exercises.
-class MathExerciseCatalog {
+class MathExerciseCatalog implements ExerciseCatalog<MathPatternConfig> {
   /// Creates a catalog.
   const MathExerciseCatalog({required this.patterns, required this.language});
 
@@ -55,6 +57,7 @@ class MathExerciseCatalog {
   final String language;
 
   /// Source documents for the pipeline.
+  @override
   List<DatasetSourceDocument> documents() {
     return [
       for (final pattern in patterns)
@@ -64,15 +67,16 @@ class MathExerciseCatalog {
           title: pattern.id,
           language: language,
           metadata: {
-            'exerciseKind': pattern.kind.name,
-            'patternId': pattern.id,
-            'complexityTier': pattern.complexityTier,
+            ExerciseMetadataKeys.exerciseKind: pattern.kind.name,
+            ExerciseMetadataKeys.patternId: pattern.id,
+            ExerciseMetadataKeys.complexityTier: pattern.complexityTier,
           },
         ),
     ];
   }
 
   /// Patterns keyed by id.
+  @override
   Map<String, MathPatternConfig> patternMap() {
     return {for (final pattern in patterns) pattern.id: pattern};
   }
