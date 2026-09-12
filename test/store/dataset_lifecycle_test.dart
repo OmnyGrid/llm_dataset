@@ -70,5 +70,60 @@ void main() {
       expect(deleted, 1);
       expect(await store.query().datasetVersion('v2').toList(), hasLength(1));
     });
+
+    test('count and export respect version filters on memory store', () async {
+      final store = MemoryDatasetStore();
+      await store.add(_entry('1'));
+      await store.add(_entry('2', datasetVersion: 'v2'));
+      await store.add(
+        _entry(
+          '3',
+          datasetVersion: 'v2',
+        ).copyWith(clearDatasetVersion: true, id: '3', variationGroup: 'g3'),
+      );
+
+      final lifecycle = DatasetLifecycle(store);
+      expect(await lifecycle.count(dataset: 'geo'), 3);
+      expect(await lifecycle.count(dataset: 'geo', version: 'v1'), 1);
+      expect(await lifecycle.count(dataset: 'geo', unversionedOnly: true), 1);
+
+      final exportPath =
+          '${Directory.systemTemp.path}/lifecycle_count_${DateTime.now().microsecondsSinceEpoch}.jsonl';
+      await lifecycle.exportJsonl(
+        exportPath,
+        dataset: 'geo',
+        unversionedOnly: true,
+      );
+      expect(await File(exportPath).readAsLines(), hasLength(1));
+      await File(exportPath).delete();
+    });
+
+    test('deleteDataset removes all versions when version omitted', () async {
+      final store = MemoryDatasetStore();
+      await store.add(_entry('1'));
+      await store.add(_entry('2', datasetVersion: 'v2'));
+
+      final lifecycle = DatasetLifecycle(store);
+      expect(await lifecycle.deleteDataset('geo'), 2);
+      expect(store.length, 0);
+    });
+
+    test('sqlite count matches memory semantics', () async {
+      final dbFile = File(
+        '${Directory.systemTemp.path}/lifecycle_count_sqlite_${DateTime.now().microsecondsSinceEpoch}.db',
+      );
+      final store = SqliteDatasetStore(dbFile.path);
+      addTearDown(() {
+        store.close();
+        if (dbFile.existsSync()) dbFile.deleteSync();
+      });
+
+      await store.add(_entry('1'));
+      await store.add(_entry('2', datasetVersion: 'v2'));
+
+      final lifecycle = DatasetLifecycle(store);
+      expect(await lifecycle.count(dataset: 'geo', version: 'v2'), 1);
+      expect(await lifecycle.listVersions('geo'), ['v1', 'v2']);
+    });
   });
 }

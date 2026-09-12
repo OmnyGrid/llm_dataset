@@ -42,10 +42,7 @@ void main() {
       await builder.buildAll();
 
       // Version guard is off, but duplicate entry ids still fail during store.
-      expect(
-        () => builder.buildAll(),
-        throwsA(isA<DuplicateEntryException>()),
-      );
+      expect(() => builder.buildAll(), throwsA(isA<DuplicateEntryException>()));
     });
   });
 }

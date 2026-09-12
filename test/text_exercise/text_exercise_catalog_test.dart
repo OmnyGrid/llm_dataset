@@ -32,6 +32,31 @@ void main() {
       }
     });
 
+    test('phrase pattern getters mirror template libraries', () {
+      expect(englishPhrasePatterns, isNotEmpty);
+      expect(
+        englishPhrasePatterns.map((p) => p.id),
+        englishPhraseLibrary.templates.map((t) => t.id),
+      );
+      expect(portuguesePhrasePatterns, isNotEmpty);
+      expect(
+        portuguesePhrasePatterns.map((p) => p.id),
+        portuguesePhraseLibrary.templates.map((t) => t.id),
+      );
+    });
+
+    test('portuguese pattern maps cover all documents', () {
+      for (final doc in portuguesePhraseDocuments()) {
+        expect(portuguesePhrasePatternMap(), containsPair(doc.id, isNotNull));
+      }
+      for (final doc in portugueseParagraphDocuments()) {
+        expect(
+          portugueseParagraphPatternMap(),
+          containsPair(doc.id, isNotNull),
+        );
+      }
+    });
+
     test('allTextExerciseDocuments merges every locale slice', () async {
       final source = allTextExerciseDocuments();
       final docs = await source.load().toList();

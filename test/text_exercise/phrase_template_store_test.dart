@@ -45,6 +45,56 @@ void main() {
       expect(buildFromTemplate(template.template, slots), isNotEmpty);
     });
 
+    test('combination stats and averageStructureCount', () async {
+      final store = await PhraseTemplateStoreLoader(localeDirectory: localeDir)
+          .load();
+
+      expect(store.combinationCount, greaterThan(store.lemmaCombinationCount));
+      expect(store.averageStructureCount, greaterThan(1));
+      expect(
+        store.rootDirectory,
+        endsWith('test/fixtures/phrase_templates/en'),
+      );
+    });
+
+    test('createVariationGenerator and combinatorial generator', () async {
+      final store = await PhraseTemplateStoreLoader(localeDirectory: localeDir)
+          .load();
+      final doc = store.library.documents().first;
+
+      final variationGen = store.createVariationGenerator(
+        variationsPerEntry: 1,
+        seed: 2,
+        instanceId: 'test',
+      );
+      final canonical = await store
+          .createPhraseGenerator(
+            config: const GeneratorConfig(
+              dataset: 'd',
+              language: 'en',
+              seed: 1,
+            ),
+          )
+          .generate(doc)
+          .first;
+      final variations = await variationGen.generate(canonical);
+      expect(variations, hasLength(1));
+
+      final combo = await store
+          .createCombinatorialGenerator(
+            config: const GeneratorConfig(
+              dataset: 'd',
+              language: 'en',
+              seed: 1,
+            ),
+          )
+          .generate(doc)
+          .take(3)
+          .toList();
+      expect(combo, hasLength(3));
+      expect(combo.first.isCanonical, isTrue);
+    });
+
     test('createPhraseGenerator produces entries', () async {
       final store = await PhraseTemplateStoreLoader(localeDirectory: localeDir)
           .load();
@@ -135,6 +185,46 @@ void main() {
       );
     });
 
+    test('fromPath factory loads store', () async {
+      final store = await PhraseTemplateStoreLoader.fromPath(localeDir.path)
+          .load();
+      expect(store.templateCount, greaterThan(0));
+    });
+
+    test('loader errors for missing and invalid manifest', () async {
+      final temp = await Directory.systemTemp.createTemp('phrase_loader_');
+      addTearDown(() => temp.deleteSync(recursive: true));
+
+      expect(
+        () => PhraseTemplateStoreLoader(localeDirectory: temp).load(),
+        throwsA(isA<PhraseTemplateStoreException>()),
+      );
+
+      await File('${temp.path}/manifest.json').writeAsString('{ invalid json');
+      expect(
+        () => PhraseTemplateStoreLoader(localeDirectory: temp).load(),
+        throwsA(isA<PhraseTemplateStoreException>()),
+      );
+    });
+
+    test('loader errors for missing referenced file', () async {
+      final temp = await Directory.systemTemp.createTemp('phrase_loader_');
+      addTearDown(() => temp.deleteSync(recursive: true));
+
+      await File('${temp.path}/manifest.json').writeAsString('''
+{
+  "language": "en",
+  "wordSets": ["words/missing.json"],
+  "templateGroups": []
+}
+''');
+
+      expect(
+        () => PhraseTemplateStoreLoader(localeDirectory: temp).load(),
+        throwsA(isA<PhraseTemplateStoreException>()),
+      );
+    });
+
     test('rejects unsafe manifest paths', () {
       expect(
         () => PhraseTemplateLocaleManifest.fromJson({
@@ -142,6 +232,56 @@ void main() {
           'wordSets': ['../secrets.json'],
           'templateGroups': <String>[],
         }),
+        throwsA(isA<PhraseTemplateStoreException>()),
+      );
+    });
+  });
+
+  group('PhraseTemplateStore empty library', () {
+    test('averageStructureCount is zero without templates', () {
+      final store = PhraseTemplateStore(
+        rootDirectory: null,
+        manifest: const PhraseTemplateLocaleManifest(
+          language: 'en',
+          version: 'test',
+          description: '',
+          wordSetPaths: [],
+          templateGroupPaths: [],
+        ),
+        lexicon: englishTextLexicon,
+        wordBank: englishWordCategoryBank,
+        library: PhraseTemplateLibrary(
+          language: 'en',
+          templates: const [],
+          wordBank: englishWordCategoryBank,
+        ),
+      );
+
+      expect(store.templateCount, 0);
+      expect(store.averageStructureCount, 0);
+      expect(store.combinationCount, 0);
+    });
+
+    test('assemble rejects empty template groups', () {
+      expect(
+        () => PhraseTemplateStoreCodec.assemble(
+          manifest: const PhraseTemplateLocaleManifest(
+            language: 'en',
+            version: 'test',
+            description: '',
+            wordSetPaths: ['words/actor.json'],
+            templateGroupPaths: [],
+          ),
+          wordSetsByPath: {
+            'words/actor.json': {
+              'category': 'actor',
+              'words': {
+                'developer': ['developer'],
+              },
+            },
+          },
+          templateGroupsByPath: const {},
+        ),
         throwsA(isA<PhraseTemplateStoreException>()),
       );
     });
