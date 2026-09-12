@@ -3,52 +3,34 @@ import 'dart:io';
 import 'package:llm_dataset/llm_dataset.dart';
 import 'package:test/test.dart';
 
+DatasetEntry _entry(String id, {String datasetVersion = 'v1'}) {
+  return DatasetEntry(
+    id: id,
+    dataset: 'geo',
+    datasetVersion: datasetVersion,
+    type: DatasetEntryType.text,
+    language: 'en',
+    input: 'in',
+    output: 'out',
+    metadata: const {},
+    provenance: const DatasetProvenance(
+      sourceId: 's',
+      generator: 'g',
+      generatorVersion: '1',
+      pipelineVersion: 'p',
+    ),
+    variationGroup: 'g1',
+    variationIndex: 0,
+    createdAt: DateTime.utc(2026),
+  );
+}
+
 void main() {
   group('DatasetLifecycle', () {
     test('lists datasets versions export and delete on memory store', () async {
       final store = MemoryDatasetStore();
-      await store.add(
-        DatasetEntry(
-          id: '1',
-          dataset: 'geo',
-          datasetVersion: 'v1',
-          type: DatasetEntryType.text,
-          language: 'en',
-          input: 'in',
-          output: 'out',
-          metadata: const {},
-          provenance: const DatasetProvenance(
-            sourceId: 's',
-            generator: 'g',
-            generatorVersion: '1',
-            pipelineVersion: 'p',
-          ),
-          variationGroup: 'g1',
-          variationIndex: 0,
-          createdAt: DateTime.utc(2026),
-        ),
-      );
-      await store.add(
-        DatasetEntry(
-          id: '2',
-          dataset: 'geo',
-          datasetVersion: 'v2',
-          type: DatasetEntryType.text,
-          language: 'en',
-          input: 'in2',
-          output: 'out2',
-          metadata: const {},
-          provenance: const DatasetProvenance(
-            sourceId: 's',
-            generator: 'g',
-            generatorVersion: '1',
-            pipelineVersion: 'p',
-          ),
-          variationGroup: 'g2',
-          variationIndex: 0,
-          createdAt: DateTime.utc(2026),
-        ),
-      );
+      await store.add(_entry('1'));
+      await store.add(_entry('2', datasetVersion: 'v2'));
 
       final lifecycle = DatasetLifecycle(store);
       expect(await lifecycle.listDatasets(), ['geo']);
@@ -64,6 +46,29 @@ void main() {
       final deleted = await lifecycle.deleteDataset('geo', version: 'v1');
       expect(deleted, 1);
       expect(await store.query().dataset('geo').toList(), hasLength(1));
+    });
+
+    test('deleteDataset on sqlite removes targeted version', () async {
+      final dbFile = File(
+        '${Directory.systemTemp.path}/lifecycle_sqlite_${DateTime.now().microsecondsSinceEpoch}.db',
+      );
+      final store = SqliteDatasetStore(dbFile.path);
+      addTearDown(() {
+        store.close();
+        if (dbFile.existsSync()) {
+          dbFile.deleteSync();
+        }
+      });
+
+      await store.add(_entry('1'));
+      await store.add(_entry('2', datasetVersion: 'v2'));
+
+      final lifecycle = DatasetLifecycle(store);
+      expect(await lifecycle.listDatasets(), ['geo']);
+
+      final deleted = await lifecycle.deleteDataset('geo', version: 'v1');
+      expect(deleted, 1);
+      expect(await store.query().datasetVersion('v2').toList(), hasLength(1));
     });
   });
 }

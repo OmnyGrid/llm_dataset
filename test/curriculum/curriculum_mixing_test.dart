@@ -86,6 +86,49 @@ void main() {
       expect(total, 15);
     });
 
+    test('resolveQueries returns primary and review stage queries', () async {
+      final manifest = CurriculumManifest.fromJson({
+        'id': 'mix-v1',
+        'initialLayers': 2,
+        'stages': [
+          {
+            'id': 'primary',
+            'order': 1,
+            'layersWhenActive': 4,
+            'dataset': 'd',
+            'datasetVersion': 'p-v1',
+            'mixing': {
+              'mode': 'mixed',
+              'reviewStages': ['review_a', 'review_b'],
+              'reviewRatio': 0.2,
+            },
+            'sources': [
+              {'kind': 'math_catalog', 'locale': 'en'},
+            ],
+          },
+        ],
+      });
+
+      final store = MemoryDatasetStore();
+      await store.addAll(
+        Stream.fromIterable([
+          entry('primary', 'p1'),
+          entry('review_a', 'ra1'),
+          entry('review_b', 'rb1'),
+        ]),
+      );
+
+      final resolved = CurriculumMixing.resolveQueries(
+        store: store,
+        manifest: manifest,
+        stageId: 'primary',
+      );
+
+      expect(await resolved.primary.toList(), hasLength(1));
+      expect(resolved.reviewQueries, hasLength(2));
+      expect(resolved.mixing.reviewRatio, 0.2);
+    });
+
     test('mergedReviewStream concatenates review stage queries', () async {
       final store = MemoryDatasetStore();
       await store.addAll(

@@ -55,6 +55,32 @@ void main() {
       );
     });
 
+    test('mixed batches interleave review entries', () async {
+      final curriculum = CurriculumDataset(store: store, manifest: manifest);
+      final mixedDataset = curriculum.mixed('phrases', seed: 11);
+
+      final batches = await mixedDataset.batches(16, limit: 32).toList();
+      final entries = batches.expand((b) => b).toList();
+      expect(entries, isNotEmpty);
+      expect(
+        entries.any(
+          (e) =>
+              e.metadata[CurriculumMetadataKeys.curriculumStage] ==
+              'language_basics',
+        ),
+        isTrue,
+      );
+    });
+
+    test('mixed batches rejects sample on non-exclusive phase', () {
+      final curriculum = CurriculumDataset(store: store, manifest: manifest);
+      final mixedDataset = curriculum.mixed('phrases');
+      expect(
+        () => mixedDataset.batches(8, sample: 4).listen((_) {}),
+        throwsArgumentError,
+      );
+    });
+
     test('exclusive mixed() behaves like exclusive()', () async {
       final curriculum = CurriculumDataset(store: store, manifest: manifest);
       final viaMixed = await curriculum
