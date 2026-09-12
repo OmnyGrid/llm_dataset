@@ -1,5 +1,6 @@
 # llm_dataset
 
+[![pub package](https://img.shields.io/pub/v/llm_dataset.svg?logo=dart&logoColor=00b9fc)](https://pub.dev/packages/llm_dataset)
 [![Null Safety](https://img.shields.io/badge/null-safety-brightgreen)](https://dart.dev/null-safety)
 [![Dart CI](https://github.com/OmnyGrid/llm_dataset/actions/workflows/dart.yml/badge.svg?branch=main)](https://github.com/OmnyGrid/llm_dataset/actions/workflows/dart.yml)
 [![Codecov](https://codecov.io/gh/OmnyGrid/llm_dataset/branch/main/graph/badge.svg)](https://codecov.io/gh/OmnyGrid/llm_dataset)
