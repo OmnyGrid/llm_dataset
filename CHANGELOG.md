@@ -1,5 +1,7 @@
 ## Unreleased
 
+## 1.4.0
+
 ### Added
 - `CurriculumPhaseDataset` — `CurriculumDataset.mixed()` now interleaves review
   entries via `Dataset.stream` / `batches`
@@ -9,7 +11,8 @@
   `listDistinctMetadataValues`)
 - `CurriculumLifecycle.stageStats()` for per-stage entry counts
 - `doc/ARCHITECTURE.md`, `CONTRIBUTING.md`, `test/fixtures/` for CI/tests
-- Query, lifecycle, mixed-phase, and exception tests
+- Query, lifecycle, mixed-phase, exception, and codec validation tests (305
+  tests, ~94% line coverage)
 
 ### Changed
 - `CurriculumBuilder.failIfVersionExists` defaults to `true` (aligned with
