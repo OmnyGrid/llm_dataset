@@ -581,7 +581,7 @@ FROM dataset_entries
 WHERE json_extract(metadata_json, ?) IS NOT NULL
 ORDER BY value ASC
 ''',
-      ['\$.${key}', '\$.${key}'],
+      ['\$.$key', '\$.$key'],
     );
     return [
       for (final row in rows)

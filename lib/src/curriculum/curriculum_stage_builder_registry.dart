@@ -142,7 +142,7 @@ class CurriculumStageBuilderRegistry {
           return const [];
         }
         return [
-          phraseStore!.createVariationGenerator(
+          phraseStore.createVariationGenerator(
             variationsPerEntry: variationsPerEntry,
             seed: config.seed,
           ),
