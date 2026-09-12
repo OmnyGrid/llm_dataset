@@ -79,9 +79,11 @@ class PhraseGenerator implements DatasetGenerator {
     ]);
     final canonicalId = stableDatasetId([variationGroup, 0, 0]);
 
-    for (var structureIndex = 0;
-        structureIndex < pattern.structureCount;
-        structureIndex++) {
+    for (
+      var structureIndex = 0;
+      structureIndex < pattern.structureCount;
+      structureIndex++
+    ) {
       final structureTemplate = pattern.allStructureTemplates[structureIndex];
       final text = buildFromTemplate(structureTemplate, slots);
 
@@ -94,8 +96,7 @@ class PhraseGenerator implements DatasetGenerator {
         output: text,
         variationIndex: structureIndex,
         parentEntryId: structureIndex == 0 ? null : canonicalId,
-        transformation:
-            structureIndex == 0 ? null : 'structure_preserving',
+        transformation: structureIndex == 0 ? null : 'structure_preserving',
         extraMetadata: {
           ...phraseExerciseMetadata(
             patternId: pattern.id,

@@ -66,8 +66,7 @@ abstract final class PhraseCombinationExpander {
     final structures = template.allStructureTemplates;
     for (final lemmaValues in _cartesianProduct(lemmaLists)) {
       final semanticKeys = {
-        for (var i = 0; i < slotNames.length; i++)
-          slotNames[i]: lemmaValues[i],
+        for (var i = 0; i < slotNames.length; i++) slotNames[i]: lemmaValues[i],
       };
 
       final surfaceLists = [
@@ -81,9 +80,11 @@ abstract final class PhraseCombinationExpander {
             slotNames[i]: surfaceValues[i],
         };
 
-        for (var structureIndex = 0;
-            structureIndex < structures.length;
-            structureIndex++) {
+        for (
+          var structureIndex = 0;
+          structureIndex < structures.length;
+          structureIndex++
+        ) {
           final structureTemplate = structures[structureIndex];
           yield PhraseCombination(
             templateId: template.id,
@@ -368,15 +369,9 @@ class PhraseCombinatorialGenerator implements DatasetGenerator {
       structureIndex: combination.structureIndex,
       structureCount: structureCount,
     );
-    final id = stableDatasetId([
-      variationGroup,
-      variationIndex,
-    ]);
+    final id = stableDatasetId([variationGroup, variationIndex]);
 
-    final canonicalId = stableDatasetId([
-      variationGroup,
-      0,
-    ]);
+    final canonicalId = stableDatasetId([variationGroup, 0]);
 
     final createdAt = config.seed == null
         ? DateTime.now().toUtc()

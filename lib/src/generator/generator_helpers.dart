@@ -31,7 +31,11 @@ DatasetEntry buildCanonicalEntry({
 
   final createdAt = config.seed == null
       ? DateTime.now().toUtc()
-      : _deterministicCreatedAt(config.seed!, document.id, index + variationIndex);
+      : _deterministicCreatedAt(
+          config.seed!,
+          document.id,
+          index + variationIndex,
+        );
 
   return DatasetEntry(
     id: id,

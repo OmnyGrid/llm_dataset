@@ -40,9 +40,7 @@ class SqliteDatasetStore implements DatasetStore {
   ///
   /// Call before streaming millions of rows. Safe for file-backed databases
   /// used as temporary build artifacts.
-  void configureForBulkInsert({
-    int cacheSizeKiB = 65536,
-  }) {
+  void configureForBulkInsert({int cacheSizeKiB = 65536}) {
     _ensureOpen();
     _db.execute('PRAGMA journal_mode = WAL;');
     _db.execute('PRAGMA synchronous = NORMAL;');
@@ -571,6 +569,24 @@ INSERT INTO dataset_entries (
             ),
       createdAt: DateTime.parse(row['created_at'] as String),
     );
+  }
+
+  /// Lists distinct string values for a top-level metadata key.
+  Future<List<String>> listDistinctMetadataValues(String key) async {
+    _ensureOpen();
+    final rows = _db.select(
+      '''
+SELECT DISTINCT json_extract(metadata_json, ?) AS value
+FROM dataset_entries
+WHERE json_extract(metadata_json, ?) IS NOT NULL
+ORDER BY value ASC
+''',
+      ['\$.${key}', '\$.${key}'],
+    );
+    return [
+      for (final row in rows)
+        if (row['value'] is String) row['value'] as String,
+    ];
   }
 
   void _ensureOpen() {

@@ -151,9 +151,7 @@ void main() {
       const template = PhraseTemplate(
         id: 'structure',
         template: '{subject} {verb} {object}.',
-        structureVariants: [
-          '{adverb}, {subject} {verb} {object}.',
-        ],
+        structureVariants: ['{adverb}, {subject} {verb} {object}.'],
         slotCategories: {
           'subject': 'actor',
           'verb': 'action',
@@ -265,7 +263,11 @@ void main() {
 
       final entries = await store
           .createCombinatorialGenerator(
-            config: const GeneratorConfig(dataset: 'd', language: 'en', seed: 1),
+            config: const GeneratorConfig(
+              dataset: 'd',
+              language: 'en',
+              seed: 1,
+            ),
           )
           .generate(doc)
           .take(3)

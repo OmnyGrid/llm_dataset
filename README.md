@@ -167,6 +167,33 @@ await lifecycle.exportJsonl('out.jsonl', dataset: 'geography', version: 'v1');
 await lifecycle.deleteDataset('geography', version: 'v0');
 ```
 
+## Progressive curriculum training
+
+Build multi-stage datasets for shallow progressive layer training (e.g. language
+basics → phrases → paragraphs → math → logic → coding). Plateau detection and
+layer freezing stay in your trainer; this package tags, builds, queries, and
+exports phase slices.
+
+```dart
+final manifest = await CurriculumManifest.loadFile('example/curriculum/curriculum.json');
+final store = SqliteDatasetStore('curriculum.db');
+await CurriculumBuilder(manifest: manifest, store: store).buildAll();
+
+final curriculum = CurriculumDataset(store: store, manifest: manifest);
+await for (final batch in curriculum.batchesPhase('phrases', 32, seed: 42)) {
+  // trainer.train(batch);
+}
+
+await CurriculumLifecycle(store: store, manifest: manifest)
+    .exportStageJsonl('phrases', 'phrases.jsonl');
+```
+
+Each entry is tagged with `curriculumStage` and related metadata. Mixed stages
+interleave review entries at `reviewRatio` per batch. Pass
+`variationOptions: CurriculumVariationOptions(variationsPerEntry: 2)` to
+[CurriculumBuilder] to emit meaning-preserving variations for text sources.
+See [`example/curriculum/README.md`](example/curriculum/README.md).
+
 ## Examples
 
 See [`example/README.md`](example/README.md) for runnable demos:

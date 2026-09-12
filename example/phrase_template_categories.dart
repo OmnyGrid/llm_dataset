@@ -52,8 +52,10 @@ void _printStoreSummary(PhraseTemplateStore store) {
 
 void _printCombinationPlan(PhraseTemplateStore store) {
   print('\n== Combinatorial expansion plan ==');
-  print('total combinations (all templates × words × synonyms): '
-      '${store.combinationCount}');
+  print(
+    'total combinations (all templates × words × synonyms): '
+    '${store.combinationCount}',
+  );
   print('canonical lemma groups: ${store.lemmaCombinationCount}');
   print(
     'synonym variations: ${store.combinationCount - store.lemmaCombinationCount}',
@@ -82,12 +84,13 @@ Future<void> _generateAllCombinations(PhraseTemplateStore store) async {
   print('storage: SQLite (batched commits, ~10k rows each)');
   print('logging: every entry printed with progress counters');
 
-  final tempDir = await Directory.systemTemp.createTemp('phrase_combinatorial_');
+  final tempDir = await Directory.systemTemp.createTemp(
+    'phrase_combinatorial_',
+  );
   final dbPath = '${tempDir.path}/all_phrase_combinations.db';
   final phrasesPath = '${tempDir.path}/all_phrases.txt';
   final phrasesSink = File(phrasesPath).openWrite();
-  final sqliteStore = SqliteDatasetStore(dbPath)
-    ..configureForBulkInsert();
+  final sqliteStore = SqliteDatasetStore(dbPath)..configureForBulkInsert();
   final lifecycle = DatasetLifecycle(sqliteStore);
 
   final config = GeneratorConfig(
@@ -143,8 +146,10 @@ Future<void> _generateAllCombinations(PhraseTemplateStore store) async {
         dataset: config.dataset,
         version: config.datasetVersion,
       );
-      final elapsedSeconds = (runStarted.elapsed.inMilliseconds / 1000)
-          .clamp(0.001, double.infinity);
+      final elapsedSeconds = (runStarted.elapsed.inMilliseconds / 1000).clamp(
+        0.001,
+        double.infinity,
+      );
       final rate = storedSoFar / elapsedSeconds;
       print(
         '\n  template done in ${templateStarted.elapsed.inSeconds}s '
@@ -184,7 +189,9 @@ Future<void> _printOutputPaths(
   final phrasesBytes = await File(phrasesPath).length();
   print('\n== Output ==');
   print('directory: ${tempDir.path}');
-  print('sqlite db: $dbPath (${(dbBytes / (1024 * 1024)).toStringAsFixed(2)} MB)');
+  print(
+    'sqlite db: $dbPath (${(dbBytes / (1024 * 1024)).toStringAsFixed(2)} MB)',
+  );
   print(
     'all phrases: $phrasesPath '
     '(${(phrasesBytes / (1024 * 1024)).toStringAsFixed(2)} MB)',

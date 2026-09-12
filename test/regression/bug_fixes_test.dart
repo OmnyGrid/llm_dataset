@@ -55,7 +55,10 @@ void main() {
       final stored = await store.stream().toList();
       expect(stored.map((e) => e.id).toSet(), hasLength(3));
       expect(
-        stored.where((e) => !e.isCanonical).map((e) => e.variationIndex).toList()
+        stored
+            .where((e) => !e.isCanonical)
+            .map((e) => e.variationIndex)
+            .toList()
           ..sort(),
         [1, 2],
       );

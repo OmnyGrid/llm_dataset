@@ -46,14 +46,14 @@ class MeaningPreservingVariationGenerator implements DatasetVariationGenerator {
 
     final metadata = entry.metadata;
     final kind = metadata[TextExerciseMetadata.textKind];
-    if (kind != 'phrase' && kind != 'paragraph') {
+    if (kind != 'phrase' && kind != 'paragraph' && kind != 'language_basics') {
       return const [];
     }
 
     late final Map<String, String> baseSlots;
     late final Map<String, String> semanticKeys;
 
-    if (kind == 'phrase') {
+    if (kind == 'phrase' || kind == 'language_basics') {
       baseSlots = Map<String, String>.from(
         (metadata[TextExerciseMetadata.slots] as Map).cast<String, String>(),
       );
@@ -102,7 +102,8 @@ class MeaningPreservingVariationGenerator implements DatasetVariationGenerator {
           variationIndex: index,
           metadata: {
             ...metadata,
-            if (kind == 'phrase') TextExerciseMetadata.slots: variedSlots,
+            if (kind == 'phrase' || kind == 'language_basics')
+              TextExerciseMetadata.slots: variedSlots,
             'variationStrategy': 'meaning_preserving',
             'variationOrdinal': variation + 1,
           },

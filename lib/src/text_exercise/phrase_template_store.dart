@@ -53,13 +53,10 @@ class PhraseTemplateStore {
 
   /// Canonical (lemma-assignment) groups across all templates.
   int get lemmaCombinationCount =>
-      PhraseCombinationExpander.countLibraryLemmaCombinations(
-        library: library,
-      );
+      PhraseCombinationExpander.countLibraryLemmaCombinations(library: library);
 
   /// Average structural templates per phrase pattern (including primary).
-  double get averageStructureCount =>
-      library.templates.isEmpty
+  double get averageStructureCount => library.templates.isEmpty
       ? 0
       : library.templates
                 .map((template) => template.structureCount)
