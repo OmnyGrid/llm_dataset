@@ -10,11 +10,14 @@ concurrency:
   group: dart-ci-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: dart-lang/setup-dart@v1
 
@@ -26,11 +29,8 @@ jobs:
       - name: Install dependencies
         run: dart pub get
 
-      - name: Upgrade dependencies
-        run: dart pub upgrade
-
       - name: dart format
-        run: dart format -o none --set-exit-if-changed lib test example
+        run: dart format -o none --set-exit-if-changed .
 
       - name: dart analyze
         run: dart analyze --fatal-infos --fatal-warnings .
@@ -44,10 +44,10 @@ jobs:
       - name: dart pub publish --dry-run
         run: dart pub publish --dry-run
 
-  test:
+  test_vm:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: dart-lang/setup-dart@v1
 
@@ -58,9 +58,6 @@ jobs:
 
       - name: Install dependencies
         run: dart pub get
-
-      - name: Upgrade dependencies
-        run: dart pub upgrade
 
       - name: Run tests (VM)
         run: dart test --platform vm --coverage=./coverage
@@ -76,7 +73,7 @@ jobs:
             -i ./coverage
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v7
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:

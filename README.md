@@ -1,9 +1,19 @@
 # llm_dataset
 
-Stream-oriented Dart package for building, storing, querying, and consuming LLM
-training datasets. Provider-independent infrastructure — not a training engine.
+[![Null Safety](https://img.shields.io/badge/null-safety-brightgreen)](https://dart.dev/null-safety)
+[![Dart CI](https://github.com/OmnyGrid/llm_dataset/actions/workflows/dart.yml/badge.svg?branch=main)](https://github.com/OmnyGrid/llm_dataset/actions/workflows/dart.yml)
+[![Codecov](https://codecov.io/gh/OmnyGrid/llm_dataset/branch/main/graph/badge.svg)](https://codecov.io/gh/OmnyGrid/llm_dataset)
+[![GitHub Tag](https://img.shields.io/github/v/tag/OmnyGrid/llm_dataset?logo=git&logoColor=white)](https://github.com/OmnyGrid/llm_dataset/releases)
+[![New Commits](https://img.shields.io/github/commits-since/OmnyGrid/llm_dataset/latest?logo=git&logoColor=white)](https://github.com/OmnyGrid/llm_dataset/network)
+[![Last Commits](https://img.shields.io/github/last-commit/OmnyGrid/llm_dataset?logo=git&logoColor=white)](https://github.com/OmnyGrid/llm_dataset/commits/main)
+[![Pull Requests](https://img.shields.io/github/issues-pr/OmnyGrid/llm_dataset?logo=github&logoColor=white)](https://github.com/OmnyGrid/llm_dataset/pulls)
+[![Code size](https://img.shields.io/github/languages/code-size/OmnyGrid/llm_dataset?logo=github&logoColor=white)](https://github.com/OmnyGrid/llm_dataset)
+[![License](https://img.shields.io/github/license/OmnyGrid/llm_dataset?logo=open-source-initiative&logoColor=green)](https://github.com/OmnyGrid/llm_dataset/blob/main/LICENSE)
 
-## Workflow
+A **stream-oriented Dart package** for building, storing, querying, and consuming
+**LLM training datasets**. Provider-independent infrastructure — not a training
+engine. You own the sources, generators, validators, and trainer; this package
+wires the pipeline and keeps every entry versioned, queryable, and reproducible.
 
 ```text
 source → generate → create variations → validate → store → query → stream into trainer
@@ -55,17 +65,6 @@ Future<void> main() async {
   final result = await pipeline.run();
   print('stored=${result.entriesStored} rejected=${result.entriesRejected}');
 
-  // Same semantic entry, multiple surface forms:
-  final group = await store.query().limit(1).toList();
-  final variations = await store
-      .query()
-      .variationGroup(group.single.variationGroup)
-      .toList();
-  for (final entry in variations) {
-    print('${entry.variationIndex}: ${entry.input}');
-  }
-
-  // Train without loading everything at once:
   final dataset = Dataset(
     store: store,
     variationSelection: VariationSelection.onePerGroup,
@@ -77,37 +76,138 @@ Future<void> main() async {
 }
 ```
 
-## Core model
-
 `DatasetEntry` is the unit of training data. Variations of the same semantic
-example share `variationGroup`. Canonical entries use `variationIndex: 0` and
-no `provenance.parentEntryId`.
+example share a `variationGroup`; canonical rows use `variationIndex: 0` with no
+`provenance.parentEntryId`. Tool-calling / chat turns live under
+`metadata['messages']` with `DatasetToolCall` objects embedded in assistant
+turns.
 
-Tool-calling / chat turns live under `metadata['messages']` with
-`DatasetToolCall` objects embedded in assistant turns.
+## API Documentation
 
-## Sources
+Generate docs locally with `dart doc`, then open `doc/api/index.html`. The public
+surface is exported from [`lib/llm_dataset.dart`](lib/llm_dataset.dart).
+
+## Features
+
+- **Pipeline-first.** `DatasetPipeline` streams source documents through a
+  generator, variation generators, validators, and into a store — rejecting bad
+  rows without stopping the run.
+- **Variation groups.** Canonical entries plus indexed surface-form variations
+  share `variationGroup`; provenance links variations back to their parent.
+- **Built-in generators.** Rule-based `TextGenerator`, `QuestionAnswerGenerator`,
+  `SummarizationGenerator`, `TranslationGenerator`, `ClassificationGenerator`,
+  `ExtractionGenerator`, and `ToolCallGenerator` — no LLM SDK required.
+- **Translation variations.** `TranslationVariationGenerator` with callback or
+  rule-based backends; merge and uniquify multiple target languages in one pass.
+- **Text exercises.** EN/PT phrase and paragraph generators, JSON-backed phrase
+  template stores, combinatorial expansion, and meaning-preserving variations.
+- **Progressive curriculum.** Multi-stage manifests, per-stage builders, mixed
+  batch sampling with configurable review ratio, and stage-scoped JSONL export.
+- **Exercise modules.** Built-in catalogs and generators for language basics,
+  math, logic, and coding drills — wired into the curriculum registry.
+- **Queryable storage.** `MemoryDatasetStore` for tests; `SqliteDatasetStore`
+  for large persistent corpora with indexed filters and batched bulk insert.
+- **Training streams.** `Dataset` and `CurriculumDataset` yield batches without
+  loading the full corpus into memory.
+- **Reproducibility.** Dataset + version, pipeline version, generator versions,
+  and seeds; optional `failIfVersionExists` guard against silent overwrites.
+- **JSONL interchange.** `DatasetExporter` / `DatasetImporter` preserve metadata,
+  provenance, variation fields, and timestamps.
+- **Tested.** Unit, integration, and curriculum end-to-end coverage over memory
+  and SQLite stores.
+
+## Architecture
+
+```text
+           Sources (Memory / Directory / JSONL)
+                          │
+                    DatasetPipeline
+              generate → vary → validate
+                          │
+                    DatasetStore
+                 (Memory / SQLite)
+                          │
+              Query ──► Dataset / CurriculumDataset
+                          │
+                    trainer batches
+```
+
+```text
+lib/
+├── llm_dataset.dart              # public barrel export
+└── src/
+    ├── model/                    # DatasetEntry, provenance, tool calls
+    ├── source/                   # MemorySource, DirectorySource, JsonlSource
+    ├── generator/                # DatasetGenerator + built-ins
+    ├── variation/                # rule-based + translation variations
+    ├── validation/               # composable validators
+    ├── pipeline/                 # DatasetPipeline orchestration
+    ├── store/                    # Memory + SQLite stores, lifecycle
+    ├── query/                    # fluent DatasetQuery filters
+    ├── serialization/            # JSON / JSONL codec
+    ├── training/                 # Dataset batch streaming
+    ├── text_exercise/            # phrases, paragraphs, template store
+    ├── curriculum/               # manifest, builder, mixing, lifecycle
+    ├── language_basics/          # vocabulary / grammar drills
+    ├── math_exercise/            # arithmetic drills
+    ├── logic_exercise/           # logic pattern drills
+    └── coding_exercise/          # code pattern drills
+```
+
+## Getting started
+
+```yaml
+dependencies:
+  llm_dataset:
+    git:
+      url: https://github.com/OmnyGrid/llm_dataset.git
+```
+
+Requires Dart **^3.13**. The package uses `dart:io` and `sqlite3` for persistent
+storage; run on VM targets (not web).
+
+## Usage
+
+### Pipeline quick start
+
+The snippet at the top builds a memory-backed dataset from one source document,
+applies rule-based variations, validates, stores, and streams training batches.
+Swap `MemoryDatasetStore` for `SqliteDatasetStore('corpus.db')` for persistence.
+
+Inspect variation groups after the run:
+
+```dart
+final group = await store.query().limit(1).toList();
+final variations = await store
+    .query()
+    .variationGroup(group.single.variationGroup)
+    .toList();
+for (final entry in variations) {
+  print('${entry.variationIndex}: ${entry.input}');
+}
+```
+
+### Sources
 
 - `MemorySource` — in-process documents
 - `DirectorySource` — stream files from disk (optional extension filter)
 - `JsonlSource` — line-by-line source documents (`id` + `content`/`text`)
 
-## Generators
+### Generators
 
-Built-ins (`TextGenerator`, `QuestionAnswerGenerator`, `SummarizationGenerator`,
-`TranslationGenerator`, `ClassificationGenerator`, `ExtractionGenerator`,
-`ToolCallGenerator`) produce **canonical** entries and do not depend on an LLM
-SDK. Supply your own `DatasetGenerator` to call an external model.
+Built-ins produce **canonical** entries and do not depend on an LLM SDK. Supply
+your own `DatasetGenerator` to call an external model. See
+[`example/custom_generator.dart`](example/custom_generator.dart) and
+[`example/builtin_generators.dart`](example/builtin_generators.dart).
 
-## Variations
+### Variations
 
 `RuleBasedVariationGenerator` applies paraphrase / formal / casual / translation
 / difficulty / format transforms, preserves `variationGroup`, assigns indexes,
 and sets `provenance.parentEntryId`. Pass `seed` for deterministic strategy
 ordering.
 
-For **real translation variations**, use `TranslationVariationGenerator`
-(`CallbackTranslationVariationGenerator`, `RuleBasedTranslationVariationGenerator`):
+For **real translation variations**, use `TranslationVariationGenerator`:
 
 ```dart
 variations: [
@@ -121,20 +221,18 @@ variations: [
 ],
 ```
 
-See [`example/translation_target_languages.dart`](example/translation_target_languages.dart) for
-[`normalizeTargetLanguages`](lib/src/variation/translation_variation_generator.dart) usage.
+See [`example/translation_target_languages.dart`](example/translation_target_languages.dart)
+for [`normalizeTargetLanguages`](lib/src/variation/translation_variation_generator.dart)
+usage.
 
-## Validation
+### Validation
 
 Composable validators: empty content, duplicates (stream + store), metadata,
 language allow-list, length, approximate token count. The pipeline rejects
-invalid entries and continues; store failures propagate.
+invalid entries and continues; store failures propagate. See
+[`example/validation_and_rejections.dart`](example/validation_and_rejections.dart).
 
-## Storage & query
-
-- `MemoryDatasetStore` for tests / small sets
-- `SqliteDatasetStore` for large persistent corpora (indexed by dataset,
-  version, type, language, variation group, source, created time, parent)
+### Storage & query
 
 ```dart
 final entries = await store
@@ -146,18 +244,17 @@ final entries = await store
     .toList();
 ```
 
-## JSON / JSONL
+`SqliteDatasetStore` indexes by dataset, version, type, language, variation
+group, source, created time, and parent. Use `configureForBulkInsert()` and
+`addAllBatched()` when streaming millions of rows.
+
+### JSON / JSONL
 
 `DatasetExporter` / `DatasetImporter` stream entry JSONL with metadata,
-provenance, variation fields, and timestamps preserved.
+provenance, variation fields, and timestamps preserved. See
+[`example/jsonl_import_export.dart`](example/jsonl_import_export.dart).
 
-## Reproducibility
-
-Record `dataset` + `datasetVersion`, `pipelineVersion`, generator versions, and
-seeds. The pipeline refuses to silently overwrite an existing dataset version
-when `failIfVersionExists` is true (default).
-
-## Dataset lifecycle
+### Dataset lifecycle
 
 ```dart
 final lifecycle = DatasetLifecycle(store);
@@ -167,7 +264,11 @@ await lifecycle.exportJsonl('out.jsonl', dataset: 'geography', version: 'v1');
 await lifecycle.deleteDataset('geography', version: 'v0');
 ```
 
-## Progressive curriculum training
+Record `dataset` + `datasetVersion`, `pipelineVersion`, generator versions, and
+seeds alongside every export. The pipeline refuses to silently overwrite an
+existing dataset version when `failIfVersionExists` is true (default).
+
+### Progressive curriculum training
 
 Build multi-stage datasets for shallow progressive layer training (e.g. language
 basics → phrases → paragraphs → math → logic → coding). Plateau detection and
@@ -191,33 +292,86 @@ await CurriculumLifecycle(store: store, manifest: manifest)
 Each entry is tagged with `curriculumStage` and related metadata. Mixed stages
 interleave review entries at `reviewRatio` per batch. Pass
 `variationOptions: CurriculumVariationOptions(variationsPerEntry: 2)` to
-[CurriculumBuilder] to emit meaning-preserving variations for text sources.
+`CurriculumBuilder` to emit meaning-preserving variations for text sources.
 See [`example/curriculum/README.md`](example/curriculum/README.md).
+
+### Text exercises & phrase templates
+
+Phrase and paragraph generators, JSON-backed template stores, and full
+combinatorial expansion across category words, lexicon synonyms, and structural
+variants. See [`example/text_exercise.dart`](example/text_exercise.dart) and
+[`example/phrase_template_categories.dart`](example/phrase_template_categories.dart).
+
+### LLM adapters (no SDK in this package)
+
+See [`example/adapters/README.md`](example/adapters/README.md) for generator and
+variation adapters that call **your** model via async callbacks. Local LLM
+examples: [`example/local_llm_translation.dart`](example/local_llm_translation.dart),
+[`example/lm_studio_translation.dart`](example/lm_studio_translation.dart).
 
 ## Examples
 
-See [`example/README.md`](example/README.md) for runnable demos:
+Runnable demos live under [`example/`](example/). From the repo root:
 
-```bash
+```sh
+dart run example/<file>.dart
+```
+
+| Example | What it shows |
+|---------|----------------|
+| [`llm_dataset_example.dart`](example/llm_dataset_example.dart) | Minimal memory pipeline + training stream |
+| [`end_to_end.dart`](example/end_to_end.dart) | JSONL source → SQLite → lifecycle → export → batches |
+| [`jsonl_import_export.dart`](example/jsonl_import_export.dart) | `DatasetExporter` / `DatasetImporter` round-trip |
+| [`query_and_sampling.dart`](example/query_and_sampling.dart) | Filters, canonical-only, one-per-group, sample, shuffle |
+| [`directory_source.dart`](example/directory_source.dart) | `DirectorySource` with extension filter |
+| [`tool_call_chat.dart`](example/tool_call_chat.dart) | `ToolCallGenerator` and `metadata['messages']` |
+| [`custom_generator.dart`](example/custom_generator.dart) | Custom `DatasetGenerator` implementation |
+| [`builtin_generators.dart`](example/builtin_generators.dart) | All built-in generators on one document |
+| [`validation_and_rejections.dart`](example/validation_and_rejections.dart) | `CompositeValidator`, rejections, version guard |
+| [`translation_variation.dart`](example/translation_variation.dart) | `TranslationVariationGenerator` and callbacks |
+| [`translation_target_languages.dart`](example/translation_target_languages.dart) | Merge + uniquify `targetLanguage` / `targetLanguages` |
+| [`translation_client_providers.dart`](example/translation_client_providers.dart) | Custom `TranslationClient` provider implementations |
+| [`local_llm_translation.dart`](example/local_llm_translation.dart) | Translation via local LLM API (Ollama / LM Studio) |
+| [`lm_studio_translation.dart`](example/lm_studio_translation.dart) | LM Studio at `127.0.0.1:1234` — multi-language variation expansion |
+| [`text_exercise.dart`](example/text_exercise.dart) | EN/PT phrases & paragraphs with meaning-preserving variations |
+| [`curriculum_training.dart`](example/curriculum_training.dart) | Self-contained curriculum build, mixed batches, and JSONL export |
+| [`phrase_template_categories.dart`](example/phrase_template_categories.dart) | Full combinatorial expansion with per-entry progress logging |
+| [`curriculum/`](example/curriculum/) | Progressive curriculum manifest, build, and mixed-phase training demo |
+| [`pipeline_store_errors.dart`](example/pipeline_store_errors.dart) | `PipelineStoreErrorPolicy.continueProcessing` |
+| [`adapters/`](example/adapters/) | LLM-backed generator and variation adapters |
+
+Quick picks:
+
+```sh
 dart run example/query_and_sampling.dart
 dart run example/jsonl_import_export.dart
-dart run example/builtin_generators.dart
-```
-
-## End-to-end example
-
-Run the SQLite workflow demo:
-
-```bash
 dart run example/end_to_end.dart
+dart run example/curriculum_training.dart
 ```
 
-## LLM adapters (no SDK in this package)
+## Running the example and tests
 
-See [`example/adapters/README.md`](example/adapters/README.md) for generator and
-variation adapters that call **your** model via async callbacks.
+```sh
+dart pub get
+dart format lib test example
+dart analyze --fatal-infos --fatal-warnings .
+dart test
+```
 
-## CI & coverage
+GitHub Actions runs format, analyze, dependency validation, doc dry-run, publish
+dry-run, and VM tests with coverage uploaded to [Codecov][codecov]. For private
+repos, add a `CODECOV_TOKEN` repository secret (from the Codecov project settings).
 
-GitHub Actions runs format, analyze, tests, and uploads coverage to Codecov.
-Add a `CODECOV_TOKEN` repository secret for upload enforcement.
+[codecov]: https://codecov.io/gh/OmnyGrid/llm_dataset
+
+# Author
+
+Graciliano M. Passos: [gmpassos@GitHub][github].
+
+[github]: https://github.com/gmpassos
+
+## License
+
+[Apache License - Version 2.0][apache_license]
+
+[apache_license]: https://www.apache.org/licenses/LICENSE-2.0.txt
