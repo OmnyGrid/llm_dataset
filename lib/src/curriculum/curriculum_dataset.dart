@@ -1,6 +1,8 @@
 import '../model/dataset_entry.dart';
 import '../store/dataset_store.dart';
 import '../training/dataset.dart';
+import '../training/dataset_special_tokens.dart';
+import '../training/dataset_text_formatter.dart';
 import 'curriculum_manifest.dart';
 import 'curriculum_mixing.dart';
 import 'curriculum_phase_dataset.dart';
@@ -43,6 +45,27 @@ class CurriculumDataset {
       mixingSeed: seed,
     );
   }
+
+  /// Streams a training phase rendered as text for a specific model.
+  ///
+  /// [streamPhase] with the target model's [DatasetSpecialTokens] applied — the
+  /// form a trainer packing a token stream actually wants, with each example
+  /// terminated so the model has somewhere to stop. Mixing is honored exactly
+  /// as [streamPhase] honors it; the formatter only decides how each entry is
+  /// written out.
+  ///
+  /// ```dart
+  /// final texts = curriculum.textsPhase(
+  ///   'math',
+  ///   DatasetTextFormatter(const DatasetSpecialTokens(eos: '<|endoftext|>')),
+  /// );
+  /// ```
+  Stream<String> textsPhase(
+    String stageId,
+    DatasetTextFormatter formatter, {
+    int? seed,
+    int? limit,
+  }) => formatter.formatAll(streamPhase(stageId, seed: seed, limit: limit));
 
   /// Streams entries for a training phase honoring mixing policy.
   Stream<DatasetEntry> streamPhase(String stageId, {int? seed, int? limit}) {

@@ -38,6 +38,8 @@ export 'src/text_exercise/text_exercise_catalog.dart';
 export 'src/text_exercise/text_lexicon.dart';
 export 'src/text_exercise/word_category_bank.dart';
 export 'src/training/dataset.dart';
+export 'src/training/dataset_special_tokens.dart';
+export 'src/training/dataset_text_formatter.dart';
 export 'src/validation/builtin_validators.dart';
 export 'src/validation/dataset_validator.dart';
 export 'src/variation/dataset_variation_generator.dart';

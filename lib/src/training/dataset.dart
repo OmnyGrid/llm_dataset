@@ -2,6 +2,7 @@ import '../model/dataset_entry.dart';
 import '../query/dataset_query.dart';
 import '../store/dataset_store.dart';
 import '../util/ids.dart';
+import 'dataset_text_formatter.dart';
 
 /// Dataset consumption API for training packages.
 ///
@@ -52,6 +53,40 @@ class Dataset {
 
     yield* q.stream();
   }
+
+  /// Streams entries rendered as training text for a specific model.
+  ///
+  /// The bridge from stored records to the flat text a language model actually
+  /// trains on: [formatter] carries the target model's
+  /// [DatasetSpecialTokens] — its terminator above all — so the same stored
+  /// dataset renders for a ChatML model and for a plain base model without
+  /// being regenerated.
+  ///
+  /// Takes the same filters as [stream], and is lazy for the same reasons.
+  ///
+  /// ```dart
+  /// final texts = dataset.texts(
+  ///   DatasetTextFormatter(const DatasetSpecialTokens(eos: '<|endoftext|>')),
+  ///   shuffle: true,
+  ///   seed: 7,
+  /// );
+  /// ```
+  Stream<String> texts(
+    DatasetTextFormatter formatter, {
+    VariationSelection? variationSelection,
+    bool shuffle = false,
+    int? seed,
+    int? sample,
+    int? limit,
+  }) => formatter.formatAll(
+    stream(
+      variationSelection: variationSelection,
+      shuffle: shuffle,
+      seed: seed,
+      sample: sample,
+      limit: limit,
+    ),
+  );
 
   /// Streams fixed-size batches without materializing the full dataset when
   /// shuffle and sampling are not requested.
